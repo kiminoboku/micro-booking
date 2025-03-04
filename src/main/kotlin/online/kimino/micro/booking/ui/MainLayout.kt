@@ -1,7 +1,6 @@
 package online.kimino.micro.booking.ui
 
 import com.vaadin.flow.component.Component
-import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.applayout.AppLayout
 import com.vaadin.flow.component.applayout.DrawerToggle
 import com.vaadin.flow.component.button.Button
@@ -13,7 +12,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.router.RouterLink
-import com.vaadin.flow.server.VaadinSession
+import com.vaadin.flow.spring.security.AuthenticationContext
 import online.kimino.micro.booking.entity.UserRole
 import online.kimino.micro.booking.security.SecurityUtils
 import online.kimino.micro.booking.ui.admin.AdminDashboardView
@@ -23,7 +22,7 @@ import online.kimino.micro.booking.ui.provider.ProviderDashboardView
 import online.kimino.micro.booking.ui.provider.ServiceManagementView
 import online.kimino.micro.booking.ui.user.ProfileView
 
-class MainLayout : AppLayout() {
+class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout() {
 
     init {
         createHeader()
@@ -36,8 +35,7 @@ class MainLayout : AppLayout() {
         logo.style.set("margin", "0")
 
         val logoutButton = Button("Logout") {
-            VaadinSession.getCurrent().session.invalidate()
-            UI.getCurrent().page.executeJs("window.location.href = 'logout'")
+            authenticationContext.logout()
         }
         logoutButton.icon = Icon(VaadinIcon.SIGN_OUT)
 
