@@ -1,0 +1,178 @@
+/* Main application theme stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+html {
+  --lumo-font-family: 'Poppins', sans-serif;
+  --lumo-primary-color: #4285f4;
+  --lumo-primary-color-50pct: rgba(66, 133, 244, 0.5);
+  --lumo-primary-color-10pct: rgba(66, 133, 244, 0.1);
+
+  --lumo-error-color: #ea4335;
+  --lumo-success-color: #34a853;
+  --lumo-warning-color: #fbbc05;
+
+  --lumo-border-radius: 8px;
+  --lumo-border-radius-s: 4px;
+  --lumo-border-radius-m: 8px;
+  --lumo-border-radius-l: 16px;
+
+  --lumo-space-xl: 2.5rem;
+  --lumo-space-l: 1.75rem;
+  --lumo-space-m: 1.25rem;
+  --lumo-space-s: 0.75rem;
+  --lumo-space-xs: 0.375rem;
+}
+
+/* Dashboard stats */
+.stat-item {
+  border-radius: var(--lumo-border-radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: var(--lumo-space-m);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Service grid styling */
+.services-grid {
+  border-radius: var(--lumo-border-radius);
+  overflow: hidden;
+}
+
+/* Bookings grid styling */
+.bookings-grid {
+  border-radius: var(--lumo-border-radius);
+  overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .responsive-padding {
+    padding: var(--lumo-space-s);
+  }
+
+  /* Make form layouts narrower on mobile */
+  .login-view,
+  .register-view,
+  .forgot-password-view,
+  .reset-password-view,
+  .email-verification-view {
+    padding: var(--lumo-space-s);
+  }
+}
+
+/* Form layout styling */
+.login-view vaadin-text-field,
+.login-view vaadin-password-field,
+.register-view vaadin-text-field,
+.register-view vaadin-password-field,
+.register-view vaadin-email-field,
+.forgot-password-view vaadin-email-field,
+.reset-password-view vaadin-password-field,
+.profile-view vaadin-text-field,
+.profile-view vaadin-password-field,
+.profile-view vaadin-email-field {
+  width: 100%;
+}
+
+/* Main layout styling */
+.drawer-section {
+  background-color: var(--lumo-base-color);
+  border-right: 1px solid var(--lumo-contrast-10pct);
+}
+
+/* Drawer navigation items */
+.drawer-section a {
+  color: var(--lumo-secondary-text-color);
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.drawer-section a:hover {
+  background-color: var(--lumo-primary-color-10pct);
+  color: var(--lumo-primary-text-color);
+}
+
+.drawer-section a[highlight] {
+  background-color: var(--lumo-primary-color-10pct);
+  color: var(--lumo-primary-text-color);
+}
+
+.drawer-section a iron-icon {
+  margin-right: var(--lumo-space-s);
+  color: var(--lumo-tertiary-text-color);
+}
+
+/* Status color indicators */
+.status-pending {
+  color: var(--lumo-primary-color);
+}
+
+.status-confirmed {
+  color: var(--lumo-success-color);
+}
+
+.status-cancelled {
+  color: var(--lumo-error-color);
+}
+
+.status-completed {
+  color: var(--lumo-success-text-color);
+}
+
+/* Custom button styles */
+.action-button {
+  margin-right: var(--lumo-space-s);
+}
+
+.action-button-danger {
+  color: var(--lumo-error-color);
+}
+
+.action-button-success {
+  color: var(--lumo-success-color);
+}
+
+/* Dialog styling */
+vaadin-dialog-overlay {
+  border-radius: var(--lumo-border-radius-l);
+}
+
+/* Login form styling */
+vaadin-login-form {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Card styling for content blocks */
+.card {
+  background-color: var(--lumo-base-color);
+  border-radius: var(--lumo-border-radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: var(--lumo-space-m);
+  margin-bottom: var(--lumo-space-m);
+}
+
+/* Dashboard layout */
+.dashboard-view {
+  padding: var(--lumo-space-m);
+}
+
+/* Dashboard cards for content blocks */
+.dashboard-card {
+  background-color: var(--lumo-base-color);
+  border-radius: var(--lumo-border-radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: var(--lumo-space-m);
+  margin-bottom: var(--lumo-space-m);
+}
+
+/* Service form styling */
+.service-form,
+.availability-form,
+.user-form {
+  padding: var(--lumo-space-m);
+}
