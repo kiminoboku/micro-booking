@@ -115,6 +115,13 @@ class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout()
                     addToDrawer(drawerLayout)
                     drawerLayout.add(
                         createNavigationItem(
+                            "Dashboard",
+                            DashboardView::class.java,
+                            VaadinIcon.DASHBOARD
+                        )
+                    )
+                    drawerLayout.add(
+                        createNavigationItem(
                             "Book a Service",
                             CreateBookingView::class.java,
                             VaadinIcon.PLUS
@@ -153,7 +160,6 @@ class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout()
         val viewName = Span(text)
 
         link.add(iconElement, viewName)
-//        link.setWidthFull()
         link.addClassNames("flex", "mx-s", "p-s", "rounded-m")
 
         return link
