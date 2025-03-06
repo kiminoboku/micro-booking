@@ -17,18 +17,23 @@ import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.spring.security.AuthenticationContext
 import online.kimino.micro.booking.entity.UserRole
 import online.kimino.micro.booking.security.SecurityUtils
+import online.kimino.micro.booking.service.TranslationProvider
 import online.kimino.micro.booking.ui.admin.AdminBookingsView
 import online.kimino.micro.booking.ui.admin.AdminDashboardView
 import online.kimino.micro.booking.ui.admin.AdminServicesView
 import online.kimino.micro.booking.ui.admin.AdminUsersView
 import online.kimino.micro.booking.ui.booking.BookingListView
 import online.kimino.micro.booking.ui.booking.CreateBookingView
+import online.kimino.micro.booking.ui.component.LanguageSelector
 import online.kimino.micro.booking.ui.provider.ExceptionPeriodManagementView
 import online.kimino.micro.booking.ui.provider.ProviderDashboardView
 import online.kimino.micro.booking.ui.provider.ServiceManagementView
 import online.kimino.micro.booking.ui.user.ProfileView
 
-class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout(), BeforeEnterObserver {
+class MainLayout(
+    val authenticationContext: AuthenticationContext,
+    val translationProvider: TranslationProvider
+) : AppLayout(), BeforeEnterObserver {
 
     init {
         createHeader()
@@ -36,16 +41,19 @@ class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout()
     }
 
     private fun createHeader() {
-        val logo = H1("Booking SaaS")
+        val logo = H1(translationProvider.getTranslation("app.name"))
         logo.style.set("font-size", "var(--lumo-font-size-l)")
         logo.style.set("margin", "0")
 
-        val logoutButton = Button("Logout") {
+        val logoutButton = Button(translationProvider.getTranslation("auth.logout")) {
             authenticationContext.logout()
         }
         logoutButton.icon = Icon(VaadinIcon.SIGN_OUT)
 
-        val header = HorizontalLayout(DrawerToggle(), logo, logoutButton)
+        // Add language selector
+        val languageSelector = LanguageSelector()
+
+        val header = HorizontalLayout(DrawerToggle(), logo, languageSelector, logoutButton)
         header.defaultVerticalComponentAlignment = FlexComponent.Alignment.CENTER
         header.expand(logo)
         header.setWidthFull()
@@ -68,86 +76,110 @@ class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout()
                     addToDrawer(drawerLayout)
                     drawerLayout.add(
                         createNavigationItem(
-                            "Admin Dashboard",
+                            translationProvider.getTranslation("admin.dashboard"),
                             AdminDashboardView::class.java,
                             VaadinIcon.DASHBOARD
                         )
                     )
-                    drawerLayout.add(createNavigationItem("Users", AdminUsersView::class.java, VaadinIcon.USERS))
                     drawerLayout.add(
                         createNavigationItem(
-                            "Services",
+                            translationProvider.getTranslation("admin.users"),
+                            AdminUsersView::class.java,
+                            VaadinIcon.USERS
+                        )
+                    )
+                    drawerLayout.add(
+                        createNavigationItem(
+                            translationProvider.getTranslation("admin.services"),
                             AdminServicesView::class.java,
                             VaadinIcon.CALENDAR_BRIEFCASE
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            "Bookings",
+                            translationProvider.getTranslation("admin.bookings"),
                             AdminBookingsView::class.java,
                             VaadinIcon.CALENDAR_CLOCK
                         )
                     )
-                    drawerLayout.add(createNavigationItem("Profile", ProfileView::class.java, VaadinIcon.USER))
+                    drawerLayout.add(
+                        createNavigationItem(
+                            translationProvider.getTranslation("profile.title"),
+                            ProfileView::class.java,
+                            VaadinIcon.USER
+                        )
+                    )
                 }
 
                 UserRole.PROVIDER -> {
                     addToDrawer(drawerLayout)
                     drawerLayout.add(
                         createNavigationItem(
-                            "Provider Dashboard",
+                            translationProvider.getTranslation("provider.dashboard"),
                             ProviderDashboardView::class.java,
                             VaadinIcon.DASHBOARD
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            "My Services",
+                            translationProvider.getTranslation("provider.services"),
                             ServiceManagementView::class.java,
                             VaadinIcon.CALENDAR_BRIEFCASE
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            "Exception Periods",
+                            translationProvider.getTranslation("provider.exception.periods"),
                             ExceptionPeriodManagementView::class.java,
                             VaadinIcon.EXCLAMATION
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            "My Bookings",
+                            translationProvider.getTranslation("booking.list"),
                             BookingListView::class.java,
                             VaadinIcon.CALENDAR_CLOCK
                         )
                     )
-                    drawerLayout.add(createNavigationItem("Profile", ProfileView::class.java, VaadinIcon.USER))
+                    drawerLayout.add(
+                        createNavigationItem(
+                            translationProvider.getTranslation("profile.title"),
+                            ProfileView::class.java,
+                            VaadinIcon.USER
+                        )
+                    )
                 }
 
                 UserRole.USER -> {
                     addToDrawer(drawerLayout)
                     drawerLayout.add(
                         createNavigationItem(
-                            "Dashboard",
+                            translationProvider.getTranslation("dashboard.title"),
                             DashboardView::class.java,
                             VaadinIcon.DASHBOARD
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            "Book a Service",
+                            translationProvider.getTranslation("booking.create"),
                             CreateBookingView::class.java,
                             VaadinIcon.PLUS
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            "My Bookings",
+                            translationProvider.getTranslation("booking.list"),
                             BookingListView::class.java,
                             VaadinIcon.CALENDAR_CLOCK
                         )
                     )
-                    drawerLayout.add(createNavigationItem("Profile", ProfileView::class.java, VaadinIcon.USER))
+                    drawerLayout.add(
+                        createNavigationItem(
+                            translationProvider.getTranslation("profile.title"),
+                            ProfileView::class.java,
+                            VaadinIcon.USER
+                        )
+                    )
                 }
 
                 else -> {

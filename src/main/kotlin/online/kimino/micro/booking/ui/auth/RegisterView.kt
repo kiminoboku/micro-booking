@@ -12,25 +12,28 @@ import com.vaadin.flow.component.textfield.TextField
 import com.vaadin.flow.data.binder.BeanValidationBinder
 import com.vaadin.flow.data.binder.Binder
 import com.vaadin.flow.data.validator.EmailValidator
-import com.vaadin.flow.router.PageTitle
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.auth.AnonymousAllowed
 import online.kimino.micro.booking.entity.User
+import online.kimino.micro.booking.service.TranslationProvider
 import online.kimino.micro.booking.service.UserService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Route("register")
-@PageTitle("Register | Booking SaaS")
 @AnonymousAllowed
-class RegisterView(@Autowired private val userService: UserService) : VerticalLayout() {
+class RegisterView(
+    @Autowired private val userService: UserService,
+    @Autowired private val translationProvider: TranslationProvider
+) : VerticalLayout(), HasDynamicTitle {
 
-    private val firstName = TextField("First Name")
-    private val lastName = TextField("Last Name")
-    private val email = EmailField("Email")
-    private val password = PasswordField("Password")
-    private val confirmPassword = PasswordField("Confirm Password")
-    private val phoneNumber = TextField("Phone Number (Optional)")
+    private val firstName = TextField(translationProvider.getTranslation("auth.first.name"))
+    private val lastName = TextField(translationProvider.getTranslation("auth.last.name"))
+    private val email = EmailField(translationProvider.getTranslation("auth.email"))
+    private val password = PasswordField(translationProvider.getTranslation("auth.password"))
+    private val confirmPassword = PasswordField(translationProvider.getTranslation("auth.confirm.password"))
+    private val phoneNumber = TextField(translationProvider.getTranslation("auth.phone.optional"))
 
     private val binder: Binder<User> = BeanValidationBinder(User::class.java)
 
@@ -47,10 +50,13 @@ class RegisterView(@Autowired private val userService: UserService) : VerticalLa
         val form = createForm()
 
         add(
-            H1("Booking SaaS"),
-            H2("Create an Account"),
+            H1(translationProvider.getTranslation("app.name")),
+            H2(translationProvider.getTranslation("auth.create.account")),
             form,
-            RouterLink("Already have an account? Login", LoginView::class.java)
+            RouterLink(
+                translationProvider.getTranslation("auth.already.account"),
+                LoginView::class.java
+            )
         )
     }
 
@@ -62,21 +68,26 @@ class RegisterView(@Autowired private val userService: UserService) : VerticalLa
         confirmPassword.isRequired = true
 
         binder.forField(firstName)
-            .asRequired("First name is required")
+            .asRequired(translationProvider.getTranslation("validation.required"))
             .bind("firstName")
 
         binder.forField(lastName)
-            .asRequired("Last name is required")
+            .asRequired(translationProvider.getTranslation("validation.required"))
             .bind("lastName")
 
         binder.forField(email)
-            .asRequired("Email is required")
-            .withValidator(EmailValidator("Please enter a valid email address"))
+            .asRequired(translationProvider.getTranslation("validation.required"))
+            .withValidator(
+                EmailValidator(translationProvider.getTranslation("validation.email"))
+            )
             .bind("email")
 
         binder.forField(password)
-            .asRequired("Password is required")
-            .withValidator({ it.length >= 8 }, "Password must be at least 8 characters long")
+            .asRequired(translationProvider.getTranslation("validation.required"))
+            .withValidator(
+                { it.length >= 8 },
+                translationProvider.getTranslation("validation.password.length")
+            )
             .bind("password")
 
         binder.forField(phoneNumber)
@@ -97,7 +108,7 @@ class RegisterView(@Autowired private val userService: UserService) : VerticalLa
             password,
             confirmPassword,
             phoneNumber,
-            Button("Register") { register() }
+            Button(translationProvider.getTranslation("auth.register")) { register() }
         )
 
         return form
@@ -105,7 +116,7 @@ class RegisterView(@Autowired private val userService: UserService) : VerticalLa
 
     private fun register() {
         if (password.value != confirmPassword.value) {
-            Notification.show("Passwords do not match")
+            Notification.show(translationProvider.getTranslation("validation.passwords.match"))
             return
         }
 
@@ -120,13 +131,19 @@ class RegisterView(@Autowired private val userService: UserService) : VerticalLa
 
             userService.createUser(user)
 
-            Notification.show("Registration successful! Please check your email to verify your account.")
+            Notification.show(
+                translationProvider.getTranslation("notification.registration.success")
+            )
 
             // Redirect to login page
             ui.ifPresent { ui -> ui.navigate(LoginView::class.java) }
 
         } catch (e: Exception) {
-            Notification.show("Registration failed: ${e.message}")
+            Notification.show(
+                "${translationProvider.getTranslation("notification.registration.failed")}: ${e.message}"
+            )
         }
     }
+
+    override fun getPageTitle() = "micro-booking :: ${translationProvider.getTranslation("auth.register")}"
 }
