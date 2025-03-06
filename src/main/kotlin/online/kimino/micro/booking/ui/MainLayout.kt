@@ -17,7 +17,6 @@ import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.spring.security.AuthenticationContext
 import online.kimino.micro.booking.entity.UserRole
 import online.kimino.micro.booking.security.SecurityUtils
-import online.kimino.micro.booking.service.TranslationProvider
 import online.kimino.micro.booking.ui.admin.AdminBookingsView
 import online.kimino.micro.booking.ui.admin.AdminDashboardView
 import online.kimino.micro.booking.ui.admin.AdminServicesView
@@ -30,10 +29,7 @@ import online.kimino.micro.booking.ui.provider.ProviderDashboardView
 import online.kimino.micro.booking.ui.provider.ServiceManagementView
 import online.kimino.micro.booking.ui.user.ProfileView
 
-class MainLayout(
-    val authenticationContext: AuthenticationContext,
-    val translationProvider: TranslationProvider
-) : AppLayout(), BeforeEnterObserver {
+class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout(), BeforeEnterObserver {
 
     init {
         createHeader()
@@ -41,11 +37,11 @@ class MainLayout(
     }
 
     private fun createHeader() {
-        val logo = H1(translationProvider.getTranslation("app.name"))
+        val logo = H1(getTranslation("app.name"))
         logo.style.set("font-size", "var(--lumo-font-size-l)")
         logo.style.set("margin", "0")
 
-        val logoutButton = Button(translationProvider.getTranslation("auth.logout")) {
+        val logoutButton = Button(getTranslation("auth.logout")) {
             authenticationContext.logout()
         }
         logoutButton.icon = Icon(VaadinIcon.SIGN_OUT)
@@ -76,35 +72,35 @@ class MainLayout(
                     addToDrawer(drawerLayout)
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("admin.dashboard"),
+                            getTranslation("admin.dashboard"),
                             AdminDashboardView::class.java,
                             VaadinIcon.DASHBOARD
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("admin.users"),
+                            getTranslation("admin.users"),
                             AdminUsersView::class.java,
                             VaadinIcon.USERS
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("admin.services"),
+                            getTranslation("admin.services"),
                             AdminServicesView::class.java,
                             VaadinIcon.CALENDAR_BRIEFCASE
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("admin.bookings"),
+                            getTranslation("admin.bookings"),
                             AdminBookingsView::class.java,
                             VaadinIcon.CALENDAR_CLOCK
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("profile.title"),
+                            getTranslation("profile.title"),
                             ProfileView::class.java,
                             VaadinIcon.USER
                         )
@@ -115,35 +111,35 @@ class MainLayout(
                     addToDrawer(drawerLayout)
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("provider.dashboard"),
+                            getTranslation("provider.dashboard"),
                             ProviderDashboardView::class.java,
                             VaadinIcon.DASHBOARD
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("provider.services"),
+                            getTranslation("provider.services"),
                             ServiceManagementView::class.java,
                             VaadinIcon.CALENDAR_BRIEFCASE
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("provider.exception.periods"),
+                            getTranslation("provider.exception.periods"),
                             ExceptionPeriodManagementView::class.java,
                             VaadinIcon.EXCLAMATION
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("booking.list"),
+                            getTranslation("booking.list"),
                             BookingListView::class.java,
                             VaadinIcon.CALENDAR_CLOCK
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("profile.title"),
+                            getTranslation("profile.title"),
                             ProfileView::class.java,
                             VaadinIcon.USER
                         )
@@ -154,28 +150,28 @@ class MainLayout(
                     addToDrawer(drawerLayout)
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("dashboard.title"),
+                            getTranslation("dashboard.title"),
                             DashboardView::class.java,
                             VaadinIcon.DASHBOARD
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("booking.create"),
+                            getTranslation("booking.create"),
                             CreateBookingView::class.java,
                             VaadinIcon.PLUS
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("booking.list"),
+                            getTranslation("booking.list"),
                             BookingListView::class.java,
                             VaadinIcon.CALENDAR_CLOCK
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
-                            translationProvider.getTranslation("profile.title"),
+                            getTranslation("profile.title"),
                             ProfileView::class.java,
                             VaadinIcon.USER
                         )

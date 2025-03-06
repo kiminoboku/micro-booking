@@ -23,7 +23,6 @@ import online.kimino.micro.booking.entity.Booking
 import online.kimino.micro.booking.entity.BookingStatus
 import online.kimino.micro.booking.entity.UserRole
 import online.kimino.micro.booking.service.BookingService
-import online.kimino.micro.booking.service.TranslationProvider
 import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.MainLayout
 import java.text.NumberFormat
@@ -33,8 +32,7 @@ import java.time.format.DateTimeFormatter
 @RolesAllowed("ADMIN")
 class AdminBookingsView(
     private val bookingService: BookingService,
-    private val userService: UserService,
-    private val translationProvider: TranslationProvider
+    private val userService: UserService
 ) : VerticalLayout(), HasDynamicTitle {
 
     private val grid = Grid<Booking>()
@@ -58,15 +56,15 @@ class AdminBookingsView(
         header.setPadding(false)
         header.setSpacing(true)
 
-        header.add(H2(translationProvider.getTranslation("admin.bookings")))
+        header.add(H2(getTranslation("admin.bookings")))
 
         val navLayout = HorizontalLayout()
         navLayout.setWidthFull()
         navLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.START)
         navLayout.add(
-            RouterLink(translationProvider.getTranslation("dashboard.title"), AdminDashboardView::class.java),
-            RouterLink(translationProvider.getTranslation("user.title.plural"), AdminUsersView::class.java),
-            RouterLink(translationProvider.getTranslation("service.title.plural"), AdminServicesView::class.java)
+            RouterLink(getTranslation("dashboard.title"), AdminDashboardView::class.java),
+            RouterLink(getTranslation("user.title.plural"), AdminUsersView::class.java),
+            RouterLink(getTranslation("service.title.plural"), AdminServicesView::class.java)
         )
 
         header.add(navLayout)
@@ -80,9 +78,9 @@ class AdminBookingsView(
         filterLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.START)
 
         val statusFilter = com.vaadin.flow.component.combobox.ComboBox<BookingStatus>()
-        statusFilter.setPlaceholder(translationProvider.getTranslation("status.filter.placeholder"))
+        statusFilter.setPlaceholder(getTranslation("status.filter.placeholder"))
         statusFilter.setItems(BookingStatus.entries.toList())
-        statusFilter.setItemLabelGenerator { translationProvider.getTranslation("booking.status.${it.name.lowercase()}") }
+        statusFilter.setItemLabelGenerator { getTranslation("booking.status.${it.name.lowercase()}") }
 
         statusFilter.addValueChangeListener { event ->
             if (event.value == null) {
@@ -92,7 +90,7 @@ class AdminBookingsView(
             }
         }
 
-        val clearButton = Button(translationProvider.getTranslation("filters.clear")) {
+        val clearButton = Button(getTranslation("filters.clear")) {
             statusFilter.clear()
             updateBookingList()
         }
@@ -107,32 +105,32 @@ class AdminBookingsView(
         grid.setSizeFull()
 
         grid.addColumn { booking -> booking.service.name }
-            .setHeader(translationProvider.getTranslation("booking.service"))
+            .setHeader(getTranslation("booking.service"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { booking -> booking.service.provider!!.fullName() }
-            .setHeader(translationProvider.getTranslation("booking.provider"))
+            .setHeader(getTranslation("booking.provider"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { booking -> booking.user.fullName() }
-            .setHeader(translationProvider.getTranslation("booking.customer"))
+            .setHeader(getTranslation("booking.customer"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { booking -> booking.startTime.format(formatter) }
-            .setHeader(translationProvider.getTranslation("booking.start.time"))
+            .setHeader(getTranslation("booking.start.time"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { booking -> booking.endTime.format(formatter) }
-            .setHeader(translationProvider.getTranslation("booking.end.time"))
+            .setHeader(getTranslation("booking.end.time"))
             .setAutoWidth(true)
 
         grid.addComponentColumn { booking ->
             val statusSpan =
-                Span(translationProvider.getTranslation("booking.status.${booking.status.name.lowercase()}"))
+                Span(getTranslation("booking.status.${booking.status.name.lowercase()}"))
 
             // Style based on status
             when (booking.status) {
@@ -144,11 +142,11 @@ class AdminBookingsView(
 
             statusSpan
         }
-            .setHeader(translationProvider.getTranslation("booking.status"))
+            .setHeader(getTranslation("booking.status"))
             .setAutoWidth(true)
 
         grid.addComponentColumn { booking -> createBookingActionButtons(booking) }
-            .setHeader(translationProvider.getTranslation("common.actions"))
+            .setHeader(getTranslation("common.actions"))
             .setAutoWidth(true)
 
         grid.getColumns().forEach { it.setResizable(true) }
@@ -166,7 +164,7 @@ class AdminBookingsView(
             showBookingDetails(booking)
         }
         detailsButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY)
-        detailsButton.element.setAttribute("title", translationProvider.getTranslation("booking.action.details"))
+        detailsButton.element.setAttribute("title", getTranslation("booking.action.details"))
 
         // Add status change buttons based on current status
         when (booking.status) {
@@ -180,7 +178,7 @@ class AdminBookingsView(
                     ButtonVariant.LUMO_TERTIARY,
                     ButtonVariant.LUMO_SUCCESS
                 )
-                confirmButton.element.setAttribute("title", translationProvider.getTranslation("common.confirm"))
+                confirmButton.element.setAttribute("title", getTranslation("common.confirm"))
 
                 // Cancel button
                 val cancelButton = Button(Icon(VaadinIcon.BAN)) {
@@ -191,7 +189,7 @@ class AdminBookingsView(
                     ButtonVariant.LUMO_TERTIARY,
                     ButtonVariant.LUMO_ERROR
                 )
-                cancelButton.element.setAttribute("title", translationProvider.getTranslation("common.cancel"))
+                cancelButton.element.setAttribute("title", getTranslation("common.cancel"))
 
                 buttonLayout.add(detailsButton, confirmButton, cancelButton)
             }
@@ -206,7 +204,7 @@ class AdminBookingsView(
                     ButtonVariant.LUMO_TERTIARY,
                     ButtonVariant.LUMO_SUCCESS
                 )
-                completeButton.element.setAttribute("title", translationProvider.getTranslation("booking.complete"))
+                completeButton.element.setAttribute("title", getTranslation("booking.complete"))
 
                 // Cancel button
                 val cancelButton = Button(Icon(VaadinIcon.BAN)) {
@@ -217,7 +215,7 @@ class AdminBookingsView(
                     ButtonVariant.LUMO_TERTIARY,
                     ButtonVariant.LUMO_ERROR
                 )
-                cancelButton.element.setAttribute("title", translationProvider.getTranslation("common.cancel"))
+                cancelButton.element.setAttribute("title", getTranslation("common.cancel"))
 
                 buttonLayout.add(detailsButton, completeButton, cancelButton)
             }
@@ -233,7 +231,7 @@ class AdminBookingsView(
 
     private fun showBookingDetails(booking: Booking) {
         val dialog = Dialog()
-        dialog.headerTitle = translationProvider.getTranslation("booking.details")
+        dialog.headerTitle = getTranslation("booking.details")
 
         val content = VerticalLayout()
         content.isPadding = true
@@ -241,43 +239,41 @@ class AdminBookingsView(
         content.width = "400px"
 
         content.add(
-            createDetailItem("${translationProvider.getTranslation("booking.service")}:", booking.service.name),
+            createDetailItem("${getTranslation("booking.service")}:", booking.service.name),
             createDetailItem(
-                "${translationProvider.getTranslation("booking.price")}:",
+                "${getTranslation("booking.price")}:",
                 NumberFormat.getCurrencyInstance().format(booking.service.price)
             ),
             createDetailItem(
-                "${translationProvider.getTranslation("booking.provider")}:",
+                "${getTranslation("booking.provider")}:",
                 booking.service.provider!!.fullName()
             ),
             createDetailItem(
-                "${translationProvider.getTranslation("booking.provider.email")}:",
+                "${getTranslation("booking.provider.email")}:",
                 booking.service.provider!!.email
             ),
-            createDetailItem("${translationProvider.getTranslation("booking.customer")}:", booking.user.fullName()),
-            createDetailItem("${translationProvider.getTranslation("booking.customer.email")}:", booking.user.email),
+            createDetailItem("${getTranslation("booking.customer")}:", booking.user.fullName()),
+            createDetailItem("${getTranslation("booking.customer.email")}:", booking.user.email),
             createDetailItem(
-                "${translationProvider.getTranslation("booking.start.time")}:",
-                booking.startTime.format(formatter)
+                "${getTranslation("booking.start.time")}:", booking.startTime.format(formatter)
             ),
             createDetailItem(
-                "${translationProvider.getTranslation("booking.end.time")}:",
-                booking.endTime.format(formatter)
+                "${getTranslation("booking.end.time")}:", booking.endTime.format(formatter)
             ),
             createDetailItem(
-                "${translationProvider.getTranslation("booking.duration")}:",
-                translationProvider.getTranslation("common.minutes", arrayOf(booking.service.duration))
+                "${getTranslation("booking.duration")}:",
+                getTranslation("common.minutes", arrayOf(booking.service.duration))
             ),
             createDetailItem(
-                "${translationProvider.getTranslation("booking.status")}:",
-                translationProvider.getTranslation("booking.status.${booking.status.name.lowercase()}")
+                "${getTranslation("booking.status")}:",
+                getTranslation("booking.status.${booking.status.name.lowercase()}")
             ),
             createDetailItem(
-                "${translationProvider.getTranslation("common.created.at")}:",
+                "${getTranslation("common.created.at")}:",
                 booking.createdAt.format(formatter)
             ),
             createDetailItem(
-                "${translationProvider.getTranslation("common.last.updated.at")}:",
+                "${getTranslation("common.last.updated.at")}:",
                 booking.updatedAt.format(formatter)
             )
         )
@@ -287,7 +283,7 @@ class AdminBookingsView(
         notesSection.setPadding(false)
         notesSection.setSpacing(true)
 
-        val notesLabel = Span("${translationProvider.getTranslation("notes.plural")}:")
+        val notesLabel = Span("${getTranslation("notes.plural")}:")
         notesLabel.style.set("font-weight", "bold")
 
         val notesValue = TextArea()
@@ -301,10 +297,10 @@ class AdminBookingsView(
 
         // Button for saving notes
         if (booking.status != BookingStatus.COMPLETED && booking.status != BookingStatus.CANCELLED) {
-            val saveButton = Button(translationProvider.getTranslation("notes.save")) {
+            val saveButton = Button(getTranslation("notes.save")) {
                 try {
                     bookingService.updateBookingNotes(booking.id, notesValue.value)
-                    Notification.show(translationProvider.getTranslation("notes.updated")).apply {
+                    Notification.show(getTranslation("notes.updated")).apply {
                         position = Notification.Position.MIDDLE
                         addThemeVariants(NotificationVariant.LUMO_SUCCESS)
                     }
@@ -312,9 +308,7 @@ class AdminBookingsView(
                     updateBookingList()
                 } catch (e: Exception) {
                     Notification.show(
-                        translationProvider.getTranslation(
-                            "notes.update.fail",
-                            arrayOf(e.message ?: "undefined")
+                        getTranslation("notes.update.fail", arrayOf(e.message ?: "undefined")
                         )
                     ).apply {
                         position = Notification.Position.MIDDLE
@@ -327,7 +321,7 @@ class AdminBookingsView(
         }
 
         // Close button
-        val closeButton = Button(translationProvider.getTranslation("common.close")) {
+        val closeButton = Button(getTranslation("common.close")) {
             dialog.close()
         }
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY)
@@ -357,9 +351,9 @@ class AdminBookingsView(
             bookingService.updateBookingStatus(booking.id, newStatus)
 
             Notification.show(
-                translationProvider.getTranslation(
+                getTranslation(
                     "booking.status.updated.to",
-                    arrayOf(translationProvider.getTranslation("booking.status.${newStatus.name.lowercase()}"))
+                    arrayOf(getTranslation("booking.status.${newStatus.name.lowercase()}"))
                 )
             ).apply {
                 position = Notification.Position.MIDDLE
@@ -369,7 +363,7 @@ class AdminBookingsView(
             updateBookingList()
         } catch (e: Exception) {
             Notification.show(
-                translationProvider.getTranslation(
+                getTranslation(
                     "booking.status.update.failed",
                     arrayOf(e.message ?: "undefined")
                 )
@@ -404,5 +398,5 @@ class AdminBookingsView(
         grid.setItems(filteredBookings)
     }
 
-    override fun getPageTitle() = "micro-booking :: ${translationProvider.getTranslation("admin.bookings")}"
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("admin.bookings")}"
 }
