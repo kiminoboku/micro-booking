@@ -13,7 +13,8 @@ import java.util.*
 @Service
 class AvailabilityService(
     private val availabilityRepository: AvailabilityRepository,
-    private val bookingRepository: BookingRepository
+    private val bookingRepository: BookingRepository,
+    private val exceptionPeriodService: ExceptionPeriodService
 ) {
     @Value("\${app.booking.default-slot-duration:60}")
     private val defaultSlotDuration: Int = 60
@@ -76,6 +77,11 @@ class AvailabilityService(
             endOfDay
         )
 
+        // Get provider ID for checking exception periods
+        val providerId = availabilityRepository.findById(serviceId)
+            .map { it.service.provider?.id ?: 0 }
+            .orElse(0)
+
         // Generate available time slots
         val availableSlots = mutableListOf<Map<String, LocalDateTime>>()
 
@@ -87,11 +93,18 @@ class AvailabilityService(
                 val currentSlotEnd = currentSlotStart.plusMinutes(serviceDuration.toLong())
 
                 // Check if this slot overlaps with any existing booking
-                val isAvailable = existingBookings.none { booking ->
+                val isBookingAvailable = existingBookings.none { booking ->
                     (currentSlotStart.isBefore(booking.endTime) && currentSlotEnd.isAfter(booking.startTime))
                 }
 
-                if (isAvailable && currentSlotStart.isAfter(LocalDateTime.now())) {
+                // Check if this slot falls within an exception period
+                val isNotInExceptionPeriod = !exceptionPeriodService.isWithinExceptionPeriod(
+                    providerId,
+                    currentSlotStart,
+                    currentSlotEnd
+                )
+
+                if (isBookingAvailable && isNotInExceptionPeriod && currentSlotStart.isAfter(LocalDateTime.now())) {
                     availableSlots.add(
                         mapOf(
                             "start" to currentSlotStart,
@@ -160,6 +173,18 @@ class AvailabilityService(
             endTime
         )
 
-        return overlappingBookings.isEmpty()
+        // Check for exception periods
+        val providerId = availabilityRepository.findById(serviceId)
+            .map { it.service.provider?.id ?: 0 }
+            .orElse(0)
+
+        val isWithinExceptionPeriod = exceptionPeriodService.isWithinExceptionPeriod(
+            providerId,
+            startTime,
+            endTime
+        )
+
+        // The slot is available if there are no overlapping bookings and it's not within an exception period
+        return overlappingBookings.isEmpty() && !isWithinExceptionPeriod
     }
 }

@@ -18,6 +18,7 @@ import online.kimino.micro.booking.security.SecurityUtils
 import online.kimino.micro.booking.ui.admin.AdminDashboardView
 import online.kimino.micro.booking.ui.booking.BookingListView
 import online.kimino.micro.booking.ui.booking.CreateBookingView
+import online.kimino.micro.booking.ui.provider.ExceptionPeriodManagementView
 import online.kimino.micro.booking.ui.provider.ProviderDashboardView
 import online.kimino.micro.booking.ui.provider.ServiceManagementView
 import online.kimino.micro.booking.ui.user.ProfileView
@@ -99,6 +100,13 @@ class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout()
                             "My Services",
                             ServiceManagementView::class.java,
                             VaadinIcon.CALENDAR_BRIEFCASE
+                        )
+                    )
+                    drawerLayout.add(
+                        createNavigationItem(
+                            "Exception Periods",
+                            ExceptionPeriodManagementView::class.java,
+                            VaadinIcon.EXCLAMATION
                         )
                     )
                     drawerLayout.add(

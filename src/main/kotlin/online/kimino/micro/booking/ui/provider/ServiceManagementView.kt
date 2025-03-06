@@ -103,12 +103,21 @@ class ServiceManagementView(
 
         val title = H2("My Services")
 
+        // Create button layout for multiple buttons
+        val buttonLayout = HorizontalLayout()
+        buttonLayout.isSpacing = true
+
+        val exceptionButton = Button("Manage Exception Periods", Icon(VaadinIcon.EXCLAMATION)) {
+            ui.ifPresent { ui -> ui.navigate(ExceptionPeriodManagementView::class.java) }
+        }
+
         val addButton = Button("Add Service", Icon(VaadinIcon.PLUS)) {
             showServiceForm(null)
         }
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
 
-        toolbar.add(title, addButton)
+        buttonLayout.add(exceptionButton, addButton)
+        toolbar.add(title, buttonLayout)
         return toolbar
     }
 

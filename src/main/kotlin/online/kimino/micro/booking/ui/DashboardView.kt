@@ -9,12 +9,11 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.progressbar.ProgressBar
-import com.vaadin.flow.router.PageTitle
-import com.vaadin.flow.router.Route
-import com.vaadin.flow.router.RouteAlias
+import com.vaadin.flow.router.*
 import jakarta.annotation.security.PermitAll
 import online.kimino.micro.booking.entity.Booking
 import online.kimino.micro.booking.entity.BookingStatus
+import online.kimino.micro.booking.entity.UserRole
 import online.kimino.micro.booking.security.SecurityUtils
 import online.kimino.micro.booking.service.BookingService
 import online.kimino.micro.booking.service.UserService
@@ -27,7 +26,7 @@ import java.time.format.DateTimeFormatter
 class DashboardView(
     private val bookingService: BookingService,
     private val userService: UserService
-) : VerticalLayout() {
+) : VerticalLayout(), BeforeEnterObserver {
 
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
@@ -53,7 +52,7 @@ class DashboardView(
 
         // Different stats based on user role
         when (SecurityUtils.getCurrentUserRole()) {
-            online.kimino.micro.booking.entity.UserRole.ADMIN -> {
+            UserRole.ADMIN -> {
                 stats.add(
                     createStat("Total Users", userService.getAllUsers().size.toString()),
                     createStat("Total Providers", userService.getAllProviders().size.toString()),
@@ -61,7 +60,7 @@ class DashboardView(
                 )
             }
 
-            online.kimino.micro.booking.entity.UserRole.PROVIDER -> {
+            UserRole.PROVIDER -> {
                 val providerId = currentUser?.id ?: 0
                 stats.add(
                     createStat("Total Bookings", bookingService.findAllByProviderId(providerId).size.toString()),
@@ -217,5 +216,29 @@ class DashboardView(
 
         layout.add(grid)
         return layout
+    }
+
+    override fun beforeEnter(event: BeforeEnterEvent) {
+        // Check if already logged in
+        if (SecurityUtils.isUserLoggedIn()) {
+            redirectToUserDashboard(event)
+        }
+    }
+
+    private fun redirectToUserDashboard(event: BeforeEnterEvent) {
+        if (SecurityUtils.getCurrentUserRole() != UserRole.USER) {
+            val targetUrl = determineTargetUrl()
+            event.forwardTo(targetUrl)
+        }
+    }
+
+    private fun determineTargetUrl(): String {
+        // Determine the target dashboard based on user role
+        return when (SecurityUtils.getCurrentUserRole()) {
+            UserRole.ADMIN -> "admin" // AdminDashboardView
+            UserRole.PROVIDER -> "provider" // ProviderDashboardView
+            UserRole.USER -> "" // DashboardView (main view)
+            else -> "" // Default to main dashboard if role not determined
+        }
     }
 }
