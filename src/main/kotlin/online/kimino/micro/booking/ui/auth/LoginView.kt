@@ -23,6 +23,7 @@ class LoginView : VerticalLayout(), BeforeEnterObserver {
         justifyContentMode = FlexComponent.JustifyContentMode.CENTER
         alignItems = FlexComponent.Alignment.CENTER
 
+        loginForm.isForgotPasswordButtonVisible = false
         loginForm.action = "login"
 
         add(

@@ -11,11 +11,16 @@ import com.vaadin.flow.component.icon.VaadinIcon
 import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
+import com.vaadin.flow.router.BeforeEnterEvent
+import com.vaadin.flow.router.BeforeEnterObserver
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.spring.security.AuthenticationContext
 import online.kimino.micro.booking.entity.UserRole
 import online.kimino.micro.booking.security.SecurityUtils
+import online.kimino.micro.booking.ui.admin.AdminBookingsView
 import online.kimino.micro.booking.ui.admin.AdminDashboardView
+import online.kimino.micro.booking.ui.admin.AdminServicesView
+import online.kimino.micro.booking.ui.admin.AdminUsersView
 import online.kimino.micro.booking.ui.booking.BookingListView
 import online.kimino.micro.booking.ui.booking.CreateBookingView
 import online.kimino.micro.booking.ui.provider.ExceptionPeriodManagementView
@@ -23,7 +28,7 @@ import online.kimino.micro.booking.ui.provider.ProviderDashboardView
 import online.kimino.micro.booking.ui.provider.ServiceManagementView
 import online.kimino.micro.booking.ui.user.ProfileView
 
-class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout() {
+class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout(), BeforeEnterObserver {
 
     init {
         createHeader()
@@ -68,18 +73,18 @@ class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout()
                             VaadinIcon.DASHBOARD
                         )
                     )
-                    drawerLayout.add(createNavigationItem("Users", AdminDashboardView::class.java, VaadinIcon.USERS))
+                    drawerLayout.add(createNavigationItem("Users", AdminUsersView::class.java, VaadinIcon.USERS))
                     drawerLayout.add(
                         createNavigationItem(
                             "Services",
-                            AdminDashboardView::class.java,
+                            AdminServicesView::class.java,
                             VaadinIcon.CALENDAR_BRIEFCASE
                         )
                     )
                     drawerLayout.add(
                         createNavigationItem(
                             "Bookings",
-                            BookingListView::class.java,
+                            AdminBookingsView::class.java,
                             VaadinIcon.CALENDAR_CLOCK
                         )
                     )
@@ -171,5 +176,23 @@ class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout()
         link.addClassNames("flex", "mx-s", "p-s", "rounded-m")
 
         return link
+    }
+
+    override fun beforeEnter(event: BeforeEnterEvent) {
+        // Redirect to role-specific dashboard if user is trying to access the root URL
+        if (event.navigationTarget == DashboardView::class.java) {
+            redirectToRoleDashboard(event)
+        }
+    }
+
+    private fun redirectToRoleDashboard(event: BeforeEnterEvent) {
+        if (SecurityUtils.isUserLoggedIn()) {
+            when (SecurityUtils.getCurrentUserRole()) {
+                UserRole.ADMIN -> event.forwardTo(AdminDashboardView::class.java)
+                UserRole.PROVIDER -> event.forwardTo(ProviderDashboardView::class.java)
+                UserRole.USER -> {} // No redirect for regular users, they stay on DashboardView
+                else -> {} // No redirect if role is not determined
+            }
+        }
     }
 }

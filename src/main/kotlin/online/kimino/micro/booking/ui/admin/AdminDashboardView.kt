@@ -1,35 +1,23 @@
 package online.kimino.micro.booking.ui.admin
 
 import com.vaadin.flow.component.Component
-import com.vaadin.flow.component.button.Button
-import com.vaadin.flow.component.button.ButtonVariant
-import com.vaadin.flow.component.dialog.Dialog
-import com.vaadin.flow.component.grid.Grid
 import com.vaadin.flow.component.html.H2
 import com.vaadin.flow.component.html.H3
 import com.vaadin.flow.component.html.Span
-import com.vaadin.flow.component.icon.Icon
-import com.vaadin.flow.component.icon.VaadinIcon
-import com.vaadin.flow.component.notification.Notification
-import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.progressbar.ProgressBar
-import com.vaadin.flow.component.tabs.Tab
-import com.vaadin.flow.component.tabs.Tabs
 import com.vaadin.flow.router.PageTitle
 import com.vaadin.flow.router.Route
+import com.vaadin.flow.router.RouterLink
 import jakarta.annotation.security.RolesAllowed
-import online.kimino.micro.booking.entity.Booking
 import online.kimino.micro.booking.entity.BookingStatus
-import online.kimino.micro.booking.entity.User
 import online.kimino.micro.booking.entity.UserRole
 import online.kimino.micro.booking.service.BookingService
 import online.kimino.micro.booking.service.ServiceService
 import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.MainLayout
-import java.time.format.DateTimeFormatter
 
 @Route(value = "admin", layout = MainLayout::class)
 @PageTitle("Admin Dashboard | Booking SaaS")
@@ -40,224 +28,36 @@ class AdminDashboardView(
     private val bookingService: BookingService
 ) : VerticalLayout() {
 
-    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-
-    private val tabs = Tabs()
-    private val dashboardTab = Tab("Dashboard")
-    private val usersTab = Tab("Users")
-    private val servicesTab = Tab("Services")
-    private val bookingsTab = Tab("Bookings")
-
-    private val contentContainer = VerticalLayout()
-
     init {
         addClassName("admin-dashboard-view")
         setSizeFull()
 
-        configureTabs()
-
         add(
-            H2("Admin Dashboard"),
-            tabs,
-            contentContainer
-        )
-
-        showDashboard()
-    }
-
-    private fun configureTabs() {
-        tabs.add(dashboardTab, usersTab, servicesTab, bookingsTab)
-        tabs.addSelectedChangeListener { event ->
-            when (event.selectedTab) {
-                dashboardTab -> showDashboard()
-                usersTab -> showUsers()
-                servicesTab -> showServices()
-                bookingsTab -> showBookings()
-            }
-        }
-    }
-
-    private fun showDashboard() {
-        contentContainer.removeAll()
-
-        contentContainer.add(
+            createHeaderWithNavigation(),
             createStatsLayout(),
             createBookingStatusVisual(),
             createUserRoleDistribution()
         )
     }
 
-    private fun showUsers() {
-        contentContainer.removeAll()
+    private fun createHeaderWithNavigation(): Component {
+        val header = VerticalLayout()
+        header.setPadding(false)
+        header.setSpacing(true)
 
-        val usersGrid = Grid<User>()
-        usersGrid.addClassName("users-grid")
-        usersGrid.setSizeFull()
+        header.add(H2("Admin Dashboard"))
 
-        usersGrid.addColumn { user -> user.firstName }
-            .setHeader("First Name")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        usersGrid.addColumn { user -> user.lastName }
-            .setHeader("Last Name")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        usersGrid.addColumn { user -> user.email }
-            .setHeader("Email")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        usersGrid.addColumn { user -> user.phoneNumber ?: "-" }
-            .setHeader("Phone")
-            .setAutoWidth(true)
-
-        usersGrid.addColumn { user -> user.role.name }
-            .setHeader("Role")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        usersGrid.addColumn { user ->
-            if (user.enabled) {
-                Span("Active").apply {
-                    element.style.set("color", "var(--lumo-success-color)")
-                }
-            } else {
-                Span("Inactive").apply {
-                    element.style.set("color", "var(--lumo-error-color)")
-                }
-            }
-        }
-            .setHeader("Status")
-            .setAutoWidth(true)
-
-        usersGrid.addComponentColumn { user -> createUserActionButtons(user) }
-            .setHeader("Actions")
-            .setAutoWidth(true)
-
-        usersGrid.getColumns().forEach { it.setResizable(true) }
-
-        usersGrid.setItems(userService.getAllUsers())
-
-        contentContainer.add(
-            createAddUserButton(),
-            usersGrid
+        val navLayout = HorizontalLayout()
+        navLayout.setWidthFull()
+        navLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.START)
+        navLayout.add(
+            RouterLink("Users", AdminUsersView::class.java),
+            RouterLink("Services", AdminServicesView::class.java),
+            RouterLink("Bookings", AdminBookingsView::class.java)
         )
-    }
 
-    private fun showServices() {
-        contentContainer.removeAll()
-
-        val servicesGrid = Grid<online.kimino.micro.booking.entity.Service>()
-        servicesGrid.addClassName("services-grid")
-        servicesGrid.setSizeFull()
-
-        servicesGrid.addColumn { service -> service.name }
-            .setHeader("Service Name")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        servicesGrid.addColumn { service -> service.provider!!.fullName() }
-            .setHeader("Provider")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        servicesGrid.addColumn { service -> service.duration }
-            .setHeader("Duration (min)")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        servicesGrid.addColumn { service -> "$${service.price}" }
-            .setHeader("Price")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        servicesGrid.addColumn { service ->
-            if (service.active) {
-                Span("Active").apply {
-                    element.style.set("color", "var(--lumo-success-color)")
-                }
-            } else {
-                Span("Inactive").apply {
-                    element.style.set("color", "var(--lumo-error-color)")
-                }
-            }
-        }
-            .setHeader("Status")
-            .setAutoWidth(true)
-
-        servicesGrid.addComponentColumn { service -> createServiceActionButtons(service) }
-            .setHeader("Actions")
-            .setAutoWidth(true)
-
-        servicesGrid.getColumns().forEach { it.setResizable(true) }
-
-        servicesGrid.setItems(serviceService.findAll())
-
-        contentContainer.add(servicesGrid)
-    }
-
-    private fun showBookings() {
-        contentContainer.removeAll()
-
-        val bookingsGrid = Grid<Booking>()
-        bookingsGrid.addClassName("bookings-grid")
-        bookingsGrid.setSizeFull()
-
-        bookingsGrid.addColumn { booking -> booking.service.name }
-            .setHeader("Service")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        bookingsGrid.addColumn { booking -> booking.service.provider!!.fullName() }
-            .setHeader("Provider")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        bookingsGrid.addColumn { booking -> booking.user.fullName() }
-            .setHeader("Customer")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        bookingsGrid.addColumn { booking -> booking.startTime.format(formatter) }
-            .setHeader("Start Time")
-            .setSortable(true)
-            .setAutoWidth(true)
-
-        bookingsGrid.addColumn { booking -> booking.endTime.format(formatter) }
-            .setHeader("End Time")
-            .setAutoWidth(true)
-
-        bookingsGrid.addColumn { booking ->
-            val statusSpan = Span(booking.status.name)
-
-            // Style based on status
-            when (booking.status) {
-                BookingStatus.PENDING -> statusSpan.element.style.set("color", "var(--lumo-primary-color)")
-                BookingStatus.CONFIRMED -> statusSpan.element.style.set("color", "var(--lumo-success-color)")
-                BookingStatus.CANCELLED -> statusSpan.element.style.set("color", "var(--lumo-error-color)")
-                BookingStatus.COMPLETED -> statusSpan.element.style.set("color", "var(--lumo-success-text-color)")
-            }
-
-            statusSpan
-        }
-            .setHeader("Status")
-            .setAutoWidth(true)
-
-        bookingsGrid.getColumns().forEach { it.setResizable(true) }
-
-        // Get all bookings
-        val allBookings = mutableListOf<Booking>()
-        userService.getAllUsers().forEach { user ->
-            if (user.role == UserRole.PROVIDER) {
-                allBookings.addAll(bookingService.findAllByProviderId(user.id))
-            }
-        }
-
-        bookingsGrid.setItems(allBookings)
-
-        contentContainer.add(bookingsGrid)
+        header.add(navLayout)
+        return header
     }
 
     private fun createStatsLayout(): Component {
@@ -392,7 +192,7 @@ class AdminDashboardView(
     }
 
     private fun createRoleStatsTable(adminCount: Int, providerCount: Int, userCount: Int, total: Int): Component {
-        val grid = Grid<RoleStatRow>()
+        val grid = com.vaadin.flow.component.grid.Grid<RoleStatRow>()
         grid.setItems(
             RoleStatRow("Admins", adminCount, calculatePercentage(adminCount, total)),
             RoleStatRow("Providers", providerCount, calculatePercentage(providerCount, total)),
@@ -412,7 +212,6 @@ class AdminDashboardView(
             .setHeader("Percentage")
             .setAutoWidth(true)
 
-//        grid.setHeightByRows(true)
         return grid
     }
 
@@ -448,170 +247,6 @@ class AdminDashboardView(
 
         layout.add(headerLayout, progressBar)
         return layout
-    }
-
-    private fun createAddUserButton(): Component {
-        val buttonLayout = HorizontalLayout()
-        buttonLayout.setWidthFull()
-        buttonLayout.justifyContentMode = FlexComponent.JustifyContentMode.END
-
-        val addButton = Button("Add User", Icon(VaadinIcon.PLUS)) {
-            showUserForm(null)
-        }
-        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
-
-        buttonLayout.add(addButton)
-        return buttonLayout
-    }
-
-    private fun createUserActionButtons(user: User): HorizontalLayout {
-        val buttonLayout = HorizontalLayout()
-        buttonLayout.isPadding = false
-        buttonLayout.isSpacing = true
-
-        // Edit button
-        val editButton = Button(Icon(VaadinIcon.EDIT)) {
-            showUserForm(user)
-        }
-        editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY)
-        editButton.element.setAttribute("title", "Edit User")
-
-        // Toggle status button
-        val toggleButton = if (user.enabled) {
-            Button(Icon(VaadinIcon.BAN)) {
-                toggleUserStatus(user)
-            }.apply {
-                element.setAttribute("title", "Disable User")
-                addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR)
-            }
-        } else {
-            Button(Icon(VaadinIcon.CHECK)) {
-                toggleUserStatus(user)
-            }.apply {
-                element.setAttribute("title", "Enable User")
-                addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SUCCESS)
-            }
-        }
-
-        buttonLayout.add(editButton, toggleButton)
-        return buttonLayout
-    }
-
-    private fun createServiceActionButtons(service: online.kimino.micro.booking.entity.Service): HorizontalLayout {
-        val buttonLayout = HorizontalLayout()
-        buttonLayout.isPadding = false
-        buttonLayout.isSpacing = true
-
-        // Toggle status button
-        val toggleButton = if (service.active) {
-            Button(Icon(VaadinIcon.BAN)) {
-                toggleServiceStatus(service)
-            }.apply {
-                element.setAttribute("title", "Deactivate Service")
-                addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR)
-            }
-        } else {
-            Button(Icon(VaadinIcon.CHECK)) {
-                toggleServiceStatus(service)
-            }.apply {
-                element.setAttribute("title", "Activate Service")
-                addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SUCCESS)
-            }
-        }
-
-        buttonLayout.add(toggleButton)
-        return buttonLayout
-    }
-
-    private fun showUserForm(user: User?) {
-        val dialog = Dialog()
-        dialog.headerTitle = if (user == null) "Add New User" else "Edit User"
-
-        val userForm = UserForm(user)
-
-        userForm.addSaveListener { event ->
-            saveUser(event.user)
-            dialog.close()
-        }
-
-        userForm.addCancelListener {
-            dialog.close()
-        }
-
-        dialog.add(userForm)
-        dialog.open()
-    }
-
-    private fun saveUser(user: User) {
-        try {
-            if (user.id == 0L) {
-                // New user
-                userService.createUser(user, user.role)
-            } else {
-                // Existing user
-                userService.updateUser(user)
-            }
-
-            Notification.show("User saved successfully").apply {
-                position = Notification.Position.MIDDLE
-                addThemeVariants(NotificationVariant.LUMO_SUCCESS)
-            }
-
-            // Refresh users tab
-            if (tabs.selectedTab == usersTab) {
-                showUsers()
-            }
-        } catch (e: Exception) {
-            Notification.show("Failed to save user: ${e.message}").apply {
-                position = Notification.Position.MIDDLE
-                addThemeVariants(NotificationVariant.LUMO_ERROR)
-            }
-        }
-    }
-
-    private fun toggleUserStatus(user: User) {
-        try {
-            user.enabled = !user.enabled
-            userService.updateUser(user)
-
-            val statusText = if (user.enabled) "enabled" else "disabled"
-            Notification.show("User $statusText successfully").apply {
-                position = Notification.Position.MIDDLE
-                addThemeVariants(NotificationVariant.LUMO_SUCCESS)
-            }
-
-            // Refresh users tab
-            if (tabs.selectedTab == usersTab) {
-                showUsers()
-            }
-        } catch (e: Exception) {
-            Notification.show("Failed to update user status: ${e.message}").apply {
-                position = Notification.Position.MIDDLE
-                addThemeVariants(NotificationVariant.LUMO_ERROR)
-            }
-        }
-    }
-
-    private fun toggleServiceStatus(service: online.kimino.micro.booking.entity.Service) {
-        try {
-            serviceService.toggleServiceStatus(service.id)
-
-            val statusText = if (service.active) "deactivated" else "activated"
-            Notification.show("Service $statusText successfully").apply {
-                position = Notification.Position.MIDDLE
-                addThemeVariants(NotificationVariant.LUMO_SUCCESS)
-            }
-
-            // Refresh services tab
-            if (tabs.selectedTab == servicesTab) {
-                showServices()
-            }
-        } catch (e: Exception) {
-            Notification.show("Failed to update service status: ${e.message}").apply {
-                position = Notification.Position.MIDDLE
-                addThemeVariants(NotificationVariant.LUMO_ERROR)
-            }
-        }
     }
 
     // Data class for role statistics
