@@ -22,14 +22,14 @@ import java.time.LocalTime
 import java.time.format.TextStyle
 import java.util.*
 
-class AvailabilityForm(availability: Availability?, private val service: Service) : FormLayout() {
+class AvailabilityForm(availability: Availability?, service: Service) : FormLayout() {
 
-    private val dayOfWeek = ComboBox<DayOfWeek>("Day of Week")
-    private val startTime = TimePicker("Start Time")
-    private val endTime = TimePicker("End Time")
+    private val dayOfWeek = ComboBox<DayOfWeek>(getTranslation("availability.day.of.week"))
+    private val startTime = TimePicker(getTranslation("availability.start.time"))
+    private val endTime = TimePicker(getTranslation("availability.end.time"))
 
-    private val save = Button("Save")
-    private val cancel = Button("Cancel")
+    private val save = Button(getTranslation("common.save"))
+    private val cancel = Button(getTranslation("common.cancel"))
 
     private val binder = BeanValidationBinder(Availability::class.java)
     private var currentAvailability = availability ?: Availability(
@@ -90,20 +90,20 @@ class AvailabilityForm(availability: Availability?, private val service: Service
 
     private fun configureBinder() {
         binder.forField(dayOfWeek)
-            .asRequired("Day of week is required")
+            .asRequired(getTranslation("validation.availability.day.required"))
             .bind(Availability::dayOfWeek, Availability::dayOfWeek::set)
 
         binder.forField(startTime)
-            .asRequired("Start time is required")
+            .asRequired(getTranslation("validation.availability.start.required"))
             .bind(Availability::startTime, Availability::startTime::set)
 
         binder.forField(endTime)
-            .asRequired("End time is required")
+            .asRequired(getTranslation("validation.availability.end.required"))
             .withValidator({ value, context ->
                 if (value != null && value.isAfter(startTime.value))
                     ValidationResult.ok()
                 else
-                    ValidationResult.error("End time must be after start time")
+                    ValidationResult.error(getTranslation("validation.availability.end.after.start"))
             })
             .bind(Availability::endTime, Availability::endTime::set)
     }
@@ -126,7 +126,7 @@ class AvailabilityForm(availability: Availability?, private val service: Service
             // Additional validation to ensure end time is after start time
             if (startTime.value != null && endTime.value != null) {
                 if (!endTime.value.isAfter(startTime.value)) {
-                    Notification.show("End time must be after start time")
+                    Notification.show(getTranslation("validation.availability.end.after.start"))
                     return
                 }
             }
