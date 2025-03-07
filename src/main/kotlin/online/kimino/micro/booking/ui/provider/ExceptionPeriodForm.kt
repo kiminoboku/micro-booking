@@ -19,14 +19,14 @@ import online.kimino.micro.booking.entity.User
 import java.time.Duration
 import java.time.LocalDateTime
 
-class ExceptionPeriodForm(exceptionPeriod: ExceptionPeriod?, private val provider: User) : FormLayout() {
+class ExceptionPeriodForm(exceptionPeriod: ExceptionPeriod?, provider: User) : FormLayout() {
 
-    private val startTime = DateTimePicker("Start Time")
-    private val endTime = DateTimePicker("End Time")
-    private val description = TextArea("Description")
+    private val startTime = DateTimePicker(getTranslation("availability.start.time"))
+    private val endTime = DateTimePicker(getTranslation("availability.end.time"))
+    private val description = TextArea(getTranslation("service.description"))
 
-    private val save = Button("Save")
-    private val cancel = Button("Cancel")
+    private val save = Button(getTranslation("common.save"))
+    private val cancel = Button(getTranslation("common.cancel"))
 
     private val binder = BeanValidationBinder(ExceptionPeriod::class.java)
     private var currentExceptionPeriod = exceptionPeriod ?: ExceptionPeriod(
@@ -61,7 +61,7 @@ class ExceptionPeriodForm(exceptionPeriod: ExceptionPeriod?, private val provide
         endTime.step = Duration.ofMinutes(15)
         endTime.min = LocalDateTime.now().plusMinutes(15)
 
-        description.placeholder = "Reason for unavailability (e.g., vacation, personal day, etc.)"
+        description.placeholder = getTranslation("booking.notes.placeholder")
 
         startTime.addValueChangeListener { updateEndTimeMin() }
 
@@ -83,16 +83,16 @@ class ExceptionPeriodForm(exceptionPeriod: ExceptionPeriod?, private val provide
 
     private fun configureBinder() {
         binder.forField(startTime)
-            .asRequired("Start time is required")
+            .asRequired(getTranslation("validation.required"))
             .bind(ExceptionPeriod::startTime, ExceptionPeriod::startTime::set)
 
         binder.forField(endTime)
-            .asRequired("End time is required")
+            .asRequired(getTranslation("validation.required"))
             .withValidator({ value, context ->
                 if (value != null && value.isAfter(startTime.value))
                     ValidationResult.ok()
                 else
-                    ValidationResult.error("End time must be after start time")
+                    ValidationResult.error(getTranslation("validation.availability.end.after.start"))
             })
             .bind(ExceptionPeriod::endTime, ExceptionPeriod::endTime::set)
 
@@ -118,7 +118,7 @@ class ExceptionPeriodForm(exceptionPeriod: ExceptionPeriod?, private val provide
             // Additional validation to ensure end time is after start time
             if (startTime.value != null && endTime.value != null) {
                 if (!endTime.value.isAfter(startTime.value)) {
-                    Notification.show("End time must be after start time")
+                    Notification.show(getTranslation("validation.availability.end.after.start"))
                     return
                 }
             }
