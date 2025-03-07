@@ -13,12 +13,11 @@ import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.component.LanguageSelector
 
 @Route("reset-password")
-@PageTitle("Reset Password | Booking SaaS")
 @AnonymousAllowed
 class PasswordResetView(
     private val userService: UserService,
     languageSelector: LanguageSelector
-) : BaseAuthView(languageSelector), HasUrlParameter<String> {
+) : BaseAuthView(languageSelector), HasUrlParameter<String>, HasDynamicTitle {
 
     private val newPassword = PasswordField(getTranslation("auth.new.password"))
     private val confirmPassword = PasswordField(getTranslation("auth.confirm.password"))
@@ -67,7 +66,7 @@ class PasswordResetView(
 
     private fun resetPassword() {
         if (token.isNullOrBlank()) {
-            showError("Invalid reset token. Please request a new password reset link.")
+            showError(getTranslation("auth.invalid.password.reset.token"))
             return
         }
 
@@ -107,10 +106,10 @@ class PasswordResetView(
                     ui.page.executeJs("setTimeout(function() { window.location.href = 'login'; }, 3000);")
                 }
             } else {
-                showError("Invalid or expired token. Please request a new password reset link.")
+                showError(getTranslation("auth.invalid.password.reset.token"))
             }
         } catch (e: Exception) {
-            showError("Failed to reset password: ${e.message}")
+            showError("${getTranslation("notification.failed")}: ${e.message}")
         }
     }
 
@@ -143,4 +142,6 @@ class PasswordResetView(
             addThemeVariants(NotificationVariant.LUMO_SUCCESS)
         }
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("auth.reset.password")}"
 }
