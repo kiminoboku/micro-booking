@@ -7,7 +7,7 @@ import com.vaadin.flow.component.html.Paragraph
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.textfield.EmailField
-import com.vaadin.flow.router.PageTitle
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.auth.AnonymousAllowed
@@ -15,12 +15,11 @@ import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.component.LanguageSelector
 
 @Route("forgot-password")
-@PageTitle("Forgot Password | Booking SaaS")
 @AnonymousAllowed
 class ForgotPasswordView(
     private val userService: UserService,
     languageSelector: LanguageSelector
-) : BaseAuthView(languageSelector) {
+) : BaseAuthView(languageSelector), HasDynamicTitle {
 
     private val email = EmailField(getTranslation("auth.email"))
     private val submitButton = Button(getTranslation("auth.reset.password"))
@@ -33,7 +32,7 @@ class ForgotPasswordView(
         messageText.isVisible = false
 
         email.isRequired = true
-        email.placeholder = "Enter your email address"
+        email.placeholder = getTranslation("auth.email")
         email.width = "100%"
 
         submitButton.addClickListener { resetPassword() }
@@ -44,7 +43,7 @@ class ForgotPasswordView(
             formLayout,
             H1(getTranslation("app.name")),
             H2(getTranslation("auth.forgot.password")),
-            Paragraph("Enter your email address and we'll send you a link to reset your password."),
+            Paragraph(getTranslation("auth.forgot.password.instruction")),
             email,
             submitButton,
             messageText,
@@ -69,8 +68,7 @@ class ForgotPasswordView(
                 email.isVisible = false
                 submitButton.isVisible = false
 
-                messageText.text =
-                    "If an account exists with email ${email.value}, a password reset link has been sent. Please check your email."
+                messageText.text = getTranslation("auth.reset.email.sent", arrayOf(email.value))
                 messageText.isVisible = true
 
                 Notification.show(getTranslation("notification.success")).apply {
@@ -79,8 +77,7 @@ class ForgotPasswordView(
                 }
             } else {
                 // For security reasons, don't indicate if the email was found or not
-                messageText.text =
-                    "If an account exists with email ${email.value}, a password reset link has been sent. Please check your email."
+                messageText.text = getTranslation("auth.reset.email.sent", arrayOf(email.value))
                 messageText.isVisible = true
             }
         } catch (e: Exception) {
@@ -90,4 +87,6 @@ class ForgotPasswordView(
             }
         }
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("auth.forgot.password")}"
 }
