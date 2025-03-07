@@ -21,15 +21,15 @@ import java.math.BigDecimal
 
 class ServiceForm(service: Service?) : FormLayout() {
 
-    private val name = TextField("Service Name")
-    private val description = TextArea("Description")
-    private val duration = ComboBox<Int>("Duration (minutes)")
-    private val price = BigDecimalField("Price")
-    private val active = Checkbox("Active")
+    private val name = TextField(getTranslation("service.name"))
+    private val description = TextArea(getTranslation("service.description"))
+    private val duration = ComboBox<Int>(getTranslation("service.duration"))
+    private val price = BigDecimalField(getTranslation("service.price"))
+    private val active = Checkbox(getTranslation("service.active"))
 
-    private val save = Button("Save")
-    private val cancel = Button("Cancel")
-    private val delete = Button("Delete")
+    private val save = Button(getTranslation("common.save"))
+    private val cancel = Button(getTranslation("common.cancel"))
+    private val delete = Button(getTranslation("common.delete"))
 
     private val binder = BeanValidationBinder(Service::class.java)
     private var currentService = service ?: Service(
@@ -65,12 +65,9 @@ class ServiceForm(service: Service?) : FormLayout() {
         description.maxLength = 1000
 
         duration.setItems(15, 30, 45, 60, 90, 120, 180, 240)
-        duration.setItemLabelGenerator { "$it minutes" }
+        duration.setItemLabelGenerator { "$it ${getTranslation("common.minutes", it)}" }
         duration.isRequired = true
 
-//        price.min = 0
-//        price.hasControls = true
-//        price.step = 1
         price.isRequired = true
 
         configureBinder()
@@ -78,20 +75,20 @@ class ServiceForm(service: Service?) : FormLayout() {
 
     private fun configureBinder() {
         binder.forField(name)
-            .asRequired("Service name is required")
-            .withValidator({ it.length >= 2 }, "Name must be at least 2 characters")
+            .asRequired(getTranslation("validation.required"))
+            .withValidator({ it.length >= 2 }, getTranslation("validation.service.name.length"))
             .bind(Service::name, Service::name::set)
 
         binder.forField(description)
             .bind(Service::description, Service::description::set)
 
         binder.forField(duration)
-            .asRequired("Duration is required")
+            .asRequired(getTranslation("validation.required"))
             .bind(Service::duration, Service::duration::set)
 
         binder.forField(price)
-            .asRequired("Price is required")
-            .withValidator(BigDecimalRangeValidator("Price must be at least 0", BigDecimal.ZERO, null))
+            .asRequired(getTranslation("validation.required"))
+            .withValidator(BigDecimalRangeValidator(getTranslation("validation.price.minimum"), BigDecimal.ZERO, null))
             .bind(Service::price, Service::price::set)
 
         binder.forField(active)
