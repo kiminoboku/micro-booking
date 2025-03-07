@@ -51,7 +51,7 @@ class EmailVerificationView(
                 showError(getTranslation("verification.invalid"))
             }
         } catch (e: Exception) {
-            showError(getTranslation("verification.failed", arrayOf(e.message)))
+            showError(getTranslation("verification.failed", e.message))
         }
     }
 

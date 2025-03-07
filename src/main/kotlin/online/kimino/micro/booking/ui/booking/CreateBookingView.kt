@@ -236,7 +236,7 @@ class CreateBookingView(
         serviceInfoLayout.removeAll()
 
         val priceText = Paragraph("${getTranslation("service.price")}: $${service.price}")
-        val durationText = Paragraph("${getTranslation("service.duration")}: ${service.duration} ${getTranslation("common.minutes", arrayOf(service.duration))}")
+        val durationText = Paragraph("${getTranslation("service.duration")}: ${getTranslation("common.minutes", service.duration)}")
         val descriptionText = Paragraph(service.description ?: getTranslation("service.no.description"))
 
         serviceInfoLayout.add(

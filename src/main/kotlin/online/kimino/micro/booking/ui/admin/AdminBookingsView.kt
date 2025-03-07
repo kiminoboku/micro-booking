@@ -307,10 +307,7 @@ class AdminBookingsView(
                     dialog.close()
                     updateBookingList()
                 } catch (e: Exception) {
-                    Notification.show(
-                        getTranslation("notes.update.fail", arrayOf(e.message ?: "undefined")
-                        )
-                    ).apply {
+                    Notification.show(getTranslation("notes.update.fail", e.message ?: "undefined")).apply {
                         position = Notification.Position.MIDDLE
                         addThemeVariants(NotificationVariant.LUMO_ERROR)
                     }
@@ -352,8 +349,7 @@ class AdminBookingsView(
 
             Notification.show(
                 getTranslation(
-                    "booking.status.updated.to",
-                    arrayOf(getTranslation("booking.status.${newStatus.name.lowercase()}"))
+                    "booking.status.updated.to", getTranslation("booking.status.${newStatus.name.lowercase()}")
                 )
             ).apply {
                 position = Notification.Position.MIDDLE
@@ -364,8 +360,7 @@ class AdminBookingsView(
         } catch (e: Exception) {
             Notification.show(
                 getTranslation(
-                    "booking.status.update.failed",
-                    arrayOf(e.message ?: "undefined")
+                    "booking.status.update.failed", e.message ?: "undefined"
                 )
             ).apply {
                 position = Notification.Position.MIDDLE

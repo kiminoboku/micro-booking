@@ -68,7 +68,7 @@ class ForgotPasswordView(
                 email.isVisible = false
                 submitButton.isVisible = false
 
-                messageText.text = getTranslation("auth.reset.email.sent", arrayOf(email.value))
+                messageText.text = getTranslation("auth.reset.email.sent", email.value)
                 messageText.isVisible = true
 
                 Notification.show(getTranslation("notification.success")).apply {
@@ -77,7 +77,7 @@ class ForgotPasswordView(
                 }
             } else {
                 // For security reasons, don't indicate if the email was found or not
-                messageText.text = getTranslation("auth.reset.email.sent", arrayOf(email.value))
+                messageText.text = getTranslation("auth.reset.email.sent", email.value)
                 messageText.isVisible = true
             }
         } catch (e: Exception) {

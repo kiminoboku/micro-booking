@@ -269,7 +269,10 @@ class BookingListView(
             createDetailItem(getTranslation("booking.customer") + ":", booking.user.fullName()),
             createDetailItem(getTranslation("booking.start.time") + ":", booking.startTime.format(formatter)),
             createDetailItem(getTranslation("booking.end.time") + ":", booking.endTime.format(formatter)),
-            createDetailItem(getTranslation("booking.status") + ":", getTranslation("booking.status.${booking.status.name.lowercase()}")),
+            createDetailItem(
+                getTranslation("booking.status") + ":",
+                getTranslation("booking.status.${booking.status.name.lowercase()}")
+            ),
             createDetailItem(getTranslation("notes.plural") + ":", booking.notes ?: getTranslation("notes.plural"))
         )
 
@@ -289,7 +292,7 @@ class BookingListView(
                     dialog.close()
                     updateBookingList()
                 } catch (e: Exception) {
-                    Notification.show(getTranslation("notes.update.fail", arrayOf(e.message))).apply {
+                    Notification.show(getTranslation("notes.update.fail", e.message)).apply {
                         position = Notification.Position.MIDDLE
                         addThemeVariants(NotificationVariant.LUMO_ERROR)
                     }
@@ -319,13 +322,17 @@ class BookingListView(
     private fun confirmBooking(booking: Booking) {
         try {
             bookingService.updateBookingStatus(booking.id, BookingStatus.CONFIRMED)
-            Notification.show(getTranslation("booking.status.updated.to", arrayOf(getTranslation("booking.status.confirmed")))).apply {
+            Notification.show(
+                getTranslation(
+                    "booking.status.updated.to", getTranslation("booking.status.confirmed")
+                )
+            ).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
             updateBookingList()
         } catch (e: Exception) {
-            Notification.show(getTranslation("booking.status.update.failed", arrayOf(e.message))).apply {
+            Notification.show(getTranslation("booking.status.update.failed", e.message)).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -335,13 +342,17 @@ class BookingListView(
     private fun completeBooking(booking: Booking) {
         try {
             bookingService.updateBookingStatus(booking.id, BookingStatus.COMPLETED)
-            Notification.show(getTranslation("booking.status.updated.to", arrayOf(getTranslation("booking.status.completed")))).apply {
+            Notification.show(
+                getTranslation(
+                    "booking.status.updated.to", getTranslation("booking.status.completed")
+                )
+            ).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
             updateBookingList()
         } catch (e: Exception) {
-            Notification.show(getTranslation("booking.status.update.failed", arrayOf(e.message))).apply {
+            Notification.show(getTranslation("booking.status.update.failed", e.message)).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -372,14 +383,18 @@ class BookingListView(
         val confirmButton = Button(getTranslation("common.yes.cancel")) {
             try {
                 bookingService.updateBookingStatus(booking.id, BookingStatus.CANCELLED)
-                Notification.show(getTranslation("booking.status.updated.to", arrayOf(getTranslation("booking.status.cancelled")))).apply {
+                Notification.show(
+                    getTranslation(
+                        "booking.status.updated.to", getTranslation("booking.status.cancelled")
+                    )
+                ).apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_SUCCESS)
                 }
                 dialog.close()
                 updateBookingList()
             } catch (e: Exception) {
-                Notification.show(getTranslation("booking.status.update.failed", arrayOf(e.message))).apply {
+                Notification.show(getTranslation("booking.status.update.failed", e.message)).apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_ERROR)
                 }

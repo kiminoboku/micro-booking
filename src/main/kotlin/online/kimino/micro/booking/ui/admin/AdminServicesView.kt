@@ -172,7 +172,7 @@ class AdminServicesView(
         // Create detail items
         val nameDetail = createDetailItem("${getTranslation("service.name")}:", service.name)
         val providerDetail = createDetailItem("${getTranslation("booking.provider")}:", service.provider!!.fullName())
-        val durationDetail = createDetailItem("${getTranslation("service.duration")}:", "${service.duration} ${getTranslation("common.minutes", arrayOf(service.duration))}")
+        val durationDetail = createDetailItem("${getTranslation("service.duration")}:", "${service.duration} ${getTranslation("common.minutes", service.duration)}")
         val priceDetail = createDetailItem("${getTranslation("service.price")}:", "$${service.price}")
         val statusDetail = createDetailItem("${getTranslation("booking.status")}:", if (service.active) getTranslation("service.active") else getTranslation("service.inactive"))
         val descriptionDetail = createDetailItem("${getTranslation("service.description")}:", service.description ?: getTranslation("service.description"))
