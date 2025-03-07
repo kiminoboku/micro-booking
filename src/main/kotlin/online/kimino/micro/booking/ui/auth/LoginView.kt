@@ -3,42 +3,41 @@ package online.kimino.micro.booking.ui.auth
 import com.vaadin.flow.component.html.H1
 import com.vaadin.flow.component.login.LoginForm
 import com.vaadin.flow.component.notification.Notification
-import com.vaadin.flow.component.orderedlayout.FlexComponent
-import com.vaadin.flow.component.orderedlayout.VerticalLayout
+import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.router.*
 import com.vaadin.flow.server.auth.AnonymousAllowed
+import online.kimino.micro.booking.ui.component.LanguageSelector
 
 @Route("login")
 @PageTitle("Login | Booking SaaS")
 @AnonymousAllowed
-class LoginView : VerticalLayout(), BeforeEnterObserver {
+class LoginView(languageSelector: LanguageSelector) : BaseAuthView(languageSelector), BeforeEnterObserver {
 
     private val loginForm = LoginForm()
 
     init {
         addClassName("login-view")
-        setSizeFull()
-
-        // Center the content
-        justifyContentMode = FlexComponent.JustifyContentMode.CENTER
-        alignItems = FlexComponent.Alignment.CENTER
 
         loginForm.isForgotPasswordButtonVisible = false
         loginForm.action = "login"
 
-        add(
-            H1("Booking SaaS"),
+        val formLayout = createFormLayout()
+        addToForm(
+            formLayout,
+            H1(getTranslation("app.name")),
             loginForm,
-            RouterLink("Register", RegisterView::class.java),
-            RouterLink("Forgot Password", ForgotPasswordView::class.java)
+            RouterLink(getTranslation("auth.register"), RegisterView::class.java),
+            RouterLink(getTranslation("auth.forgot.password"), ForgotPasswordView::class.java)
         )
     }
 
     override fun beforeEnter(event: BeforeEnterEvent) {
-        // Redirect to default view if user is already logged in
         if (event.location.queryParameters.parameters.containsKey("error")) {
             loginForm.isError = true
-            Notification.show("Invalid username or password.")
+            Notification.show(getTranslation("auth.invalid.credentials")).apply {
+                position = Notification.Position.MIDDLE
+                addThemeVariants(NotificationVariant.LUMO_ERROR)
+            }
         }
     }
 }

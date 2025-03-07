@@ -14,7 +14,7 @@ class MessageConfig {
     @Bean
     fun messageSource(): MessageSource {
         val messageSource = ResourceBundleMessageSource()
-        messageSource.setBasenames("messages")
+        messageSource.setBasenames("vaadin-i18n/translations")
         messageSource.setDefaultEncoding("UTF-8")
         return messageSource
     }

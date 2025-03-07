@@ -4,8 +4,7 @@ import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.html.H1
 import com.vaadin.flow.component.html.H2
 import com.vaadin.flow.component.notification.Notification
-import com.vaadin.flow.component.orderedlayout.FlexComponent
-import com.vaadin.flow.component.orderedlayout.VerticalLayout
+import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.textfield.EmailField
 import com.vaadin.flow.component.textfield.PasswordField
 import com.vaadin.flow.component.textfield.TextField
@@ -18,10 +17,14 @@ import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.auth.AnonymousAllowed
 import online.kimino.micro.booking.entity.User
 import online.kimino.micro.booking.service.UserService
+import online.kimino.micro.booking.ui.component.LanguageSelector
 
 @Route("register")
 @AnonymousAllowed
-class RegisterView(private val userService: UserService) : VerticalLayout(), HasDynamicTitle {
+class RegisterView(
+    private val userService: UserService,
+    languageSelector: LanguageSelector
+) : BaseAuthView(languageSelector), HasDynamicTitle {
 
     private val firstName = TextField(getTranslation("auth.first.name"))
     private val lastName = TextField(getTranslation("auth.last.name"))
@@ -34,24 +37,24 @@ class RegisterView(private val userService: UserService) : VerticalLayout(), Has
 
     init {
         addClassName("register-view")
-        setSizeFull()
-
-        // Center the content
-        justifyContentMode = FlexComponent.JustifyContentMode.CENTER
-        alignItems = FlexComponent.Alignment.CENTER
-
         configureFields()
 
-        val form = createForm()
+        val formLayout = createFormLayout()
 
-        add(
+        val registerButton = Button(getTranslation("auth.register")) { register() }
+
+        addToForm(
+            formLayout,
             H1(getTranslation("app.name")),
             H2(getTranslation("auth.create.account")),
-            form,
-            RouterLink(
-                getTranslation("auth.already.account"),
-                LoginView::class.java
-            )
+            firstName,
+            lastName,
+            email,
+            password,
+            confirmPassword,
+            phoneNumber,
+            registerButton,
+            RouterLink(getTranslation("auth.already.account"), LoginView::class.java)
         )
     }
 
@@ -89,29 +92,12 @@ class RegisterView(private val userService: UserService) : VerticalLayout(), Has
             .bind("phoneNumber")
     }
 
-    private fun createForm(): VerticalLayout {
-        val form = VerticalLayout()
-        form.width = "100%"
-        form.maxWidth = "500px"
-        form.isPadding = true
-        form.isSpacing = true
-
-        form.add(
-            firstName,
-            lastName,
-            email,
-            password,
-            confirmPassword,
-            phoneNumber,
-            Button(getTranslation("auth.register")) { register() }
-        )
-
-        return form
-    }
-
     private fun register() {
         if (password.value != confirmPassword.value) {
-            Notification.show(getTranslation("validation.passwords.match"))
+            Notification.show(getTranslation("validation.passwords.match")).apply {
+                position = Notification.Position.MIDDLE
+                addThemeVariants(NotificationVariant.LUMO_ERROR)
+            }
             return
         }
 
@@ -128,7 +114,10 @@ class RegisterView(private val userService: UserService) : VerticalLayout(), Has
 
             Notification.show(
                 getTranslation("notification.registration.success")
-            )
+            ).apply {
+                position = Notification.Position.MIDDLE
+                addThemeVariants(NotificationVariant.LUMO_SUCCESS)
+            }
 
             // Redirect to login page
             ui.ifPresent { ui -> ui.navigate(LoginView::class.java) }
@@ -136,7 +125,10 @@ class RegisterView(private val userService: UserService) : VerticalLayout(), Has
         } catch (e: Exception) {
             Notification.show(
                 "${getTranslation("notification.registration.failed")}: ${e.message}"
-            )
+            ).apply {
+                position = Notification.Position.MIDDLE
+                addThemeVariants(NotificationVariant.LUMO_ERROR)
+            }
         }
     }
 

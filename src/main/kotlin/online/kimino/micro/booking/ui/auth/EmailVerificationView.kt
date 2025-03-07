@@ -5,46 +5,35 @@ import com.vaadin.flow.component.html.H2
 import com.vaadin.flow.component.html.Paragraph
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.notification.NotificationVariant
-import com.vaadin.flow.component.orderedlayout.FlexComponent
-import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.router.*
 import com.vaadin.flow.server.auth.AnonymousAllowed
 import online.kimino.micro.booking.service.UserService
+import online.kimino.micro.booking.ui.component.LanguageSelector
 
 @Route("verify")
 @PageTitle("Verify Email | Booking SaaS")
 @AnonymousAllowed
-class EmailVerificationView(private val userService: UserService) : VerticalLayout(), HasUrlParameter<String> {
+class EmailVerificationView(
+    private val userService: UserService,
+    languageSelector: LanguageSelector
+) : BaseAuthView(languageSelector), HasUrlParameter<String> {
 
     private val statusText = Paragraph()
-    private val loginLink = RouterLink("Go to Login", LoginView::class.java)
+    private val loginLink = RouterLink(getTranslation("auth.go.to.login"), LoginView::class.java)
 
     init {
         addClassName("email-verification-view")
-        setSizeFull()
 
-        // Center the content
-        justifyContentMode = FlexComponent.JustifyContentMode.CENTER
-        alignItems = FlexComponent.Alignment.CENTER
-
-        val contentLayout = VerticalLayout()
-        contentLayout.width = "100%"
-        contentLayout.maxWidth = "500px"
-        contentLayout.isPadding = true
-        contentLayout.isSpacing = true
-        contentLayout.defaultHorizontalComponentAlignment = FlexComponent.Alignment.CENTER
-
-        contentLayout.add(
-            H2("Email Verification"),
-            statusText,
-            loginLink
-        )
+        val formLayout = createFormLayout()
 
         loginLink.isVisible = false
 
-        add(
-            H1("Booking SaaS"),
-            contentLayout
+        addToForm(
+            formLayout,
+            H1(getTranslation("app.name")),
+            H2(getTranslation("auth.email.verification")),
+            statusText,
+            loginLink
         )
     }
 

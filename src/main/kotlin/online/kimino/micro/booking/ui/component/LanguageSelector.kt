@@ -25,11 +25,16 @@ class LanguageSelector : HorizontalLayout() {
     init {
         this.setWidthFull()
         this.justifyContentMode = FlexComponent.JustifyContentMode.END
+        this.defaultVerticalComponentAlignment = FlexComponent.Alignment.CENTER
+        this.height = "40px"
 
         languageSelect.setItems(supportedLocales)
         languageSelect.setItemLabelGenerator { getDisplayLanguage(it) }
         languageSelect.prefixComponent = Icon(VaadinIcon.GLOBE)
         languageSelect.width = "150px"
+        languageSelect.placeholder = "Language"
+
+        // Set the current locale or default to English
         languageSelect.value = VaadinSession.getCurrent().locale ?: Locale.ENGLISH
 
         languageSelect.addValueChangeListener { event ->

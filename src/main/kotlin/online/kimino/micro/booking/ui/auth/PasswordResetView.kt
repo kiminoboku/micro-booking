@@ -6,33 +6,30 @@ import com.vaadin.flow.component.html.H2
 import com.vaadin.flow.component.html.Paragraph
 import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.notification.NotificationVariant
-import com.vaadin.flow.component.orderedlayout.FlexComponent
-import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.PasswordField
 import com.vaadin.flow.router.*
 import com.vaadin.flow.server.auth.AnonymousAllowed
 import online.kimino.micro.booking.service.UserService
+import online.kimino.micro.booking.ui.component.LanguageSelector
 
 @Route("reset-password")
 @PageTitle("Reset Password | Booking SaaS")
 @AnonymousAllowed
-class PasswordResetView(private val userService: UserService) : VerticalLayout(), HasUrlParameter<String> {
+class PasswordResetView(
+    private val userService: UserService,
+    languageSelector: LanguageSelector
+) : BaseAuthView(languageSelector), HasUrlParameter<String> {
 
-    private val newPassword = PasswordField("New Password")
-    private val confirmPassword = PasswordField("Confirm Password")
-    private val submitButton = Button("Reset Password")
+    private val newPassword = PasswordField(getTranslation("auth.new.password"))
+    private val confirmPassword = PasswordField(getTranslation("auth.confirm.password"))
+    private val submitButton = Button(getTranslation("auth.reset.password"))
     private val messageText = Paragraph()
-    private val backToLoginLink = RouterLink("Back to Login", LoginView::class.java)
+    private val backToLoginLink = RouterLink(getTranslation("auth.go.to.login"), LoginView::class.java)
 
     private var token: String? = null
 
     init {
         addClassName("reset-password-view")
-        setSizeFull()
-
-        // Center the content
-        justifyContentMode = FlexComponent.JustifyContentMode.CENTER
-        alignItems = FlexComponent.Alignment.CENTER
 
         messageText.isVisible = false
 
@@ -44,25 +41,18 @@ class PasswordResetView(private val userService: UserService) : VerticalLayout()
 
         submitButton.addClickListener { resetPassword() }
 
-        val formLayout = VerticalLayout()
-        formLayout.width = "100%"
-        formLayout.maxWidth = "500px"
-        formLayout.isPadding = true
-        formLayout.isSpacing = true
+        val formLayout = createFormLayout()
 
-        formLayout.add(
-            H2("Reset Password"),
+        addToForm(
+            formLayout,
+            H1(getTranslation("app.name")),
+            H2(getTranslation("auth.reset.password")),
             Paragraph("Please enter your new password."),
             newPassword,
             confirmPassword,
             submitButton,
             messageText,
             backToLoginLink
-        )
-
-        add(
-            H1("Booking SaaS"),
-            formLayout
         )
     }
 
@@ -71,7 +61,7 @@ class PasswordResetView(private val userService: UserService) : VerticalLayout()
 
         if (token.isNullOrBlank()) {
             // Token is missing, show error and disable form
-            showError("Invalid or missing reset token. Please request a new password reset link.")
+            showError(getTranslation("auth.invalid.password.reset.token"))
         }
     }
 
@@ -82,7 +72,7 @@ class PasswordResetView(private val userService: UserService) : VerticalLayout()
         }
 
         if (newPassword.value.isNullOrBlank() || confirmPassword.value.isNullOrBlank()) {
-            Notification.show("Both password fields are required").apply {
+            Notification.show(getTranslation("validation.required")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -90,7 +80,7 @@ class PasswordResetView(private val userService: UserService) : VerticalLayout()
         }
 
         if (newPassword.value != confirmPassword.value) {
-            Notification.show("Passwords do not match").apply {
+            Notification.show(getTranslation("validation.passwords.match")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -98,7 +88,7 @@ class PasswordResetView(private val userService: UserService) : VerticalLayout()
         }
 
         if (newPassword.value.length < 8) {
-            Notification.show("Password must be at least 8 characters long").apply {
+            Notification.show(getTranslation("validation.password.length")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
