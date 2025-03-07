@@ -13,7 +13,7 @@ import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
-import com.vaadin.flow.router.PageTitle
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import jakarta.annotation.security.RolesAllowed
 import online.kimino.micro.booking.entity.Service
@@ -25,12 +25,11 @@ import online.kimino.micro.booking.ui.MainLayout
 import java.time.format.DateTimeFormatter
 
 @Route(value = "services", layout = MainLayout::class)
-@PageTitle("Service Management | Booking SaaS")
 @RolesAllowed("PROVIDER")
 class ServiceManagementView(
     private val serviceService: ServiceService,
     private val userService: UserService
-) : VerticalLayout() {
+) : VerticalLayout(), HasDynamicTitle {
 
     private val grid = Grid<Service>()
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
@@ -55,41 +54,41 @@ class ServiceManagementView(
         grid.setSizeFull()
 
         grid.addColumn { service -> service.name }
-            .setHeader("Service Name")
+            .setHeader(getTranslation("service.name"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { service -> service.duration }
-            .setHeader("Duration (min)")
+            .setHeader(getTranslation("service.duration"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { service -> "$${service.price}" }
-            .setHeader("Price")
+            .setHeader(getTranslation("service.price"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addComponentColumn { service ->
             if (service.active) {
-                Span("Active").apply {
+                Span(getTranslation("service.active")).apply {
                     element.style.set("color", "var(--lumo-success-color)")
                 }
             } else {
-                Span("Inactive").apply {
+                Span(getTranslation("service.inactive")).apply {
                     element.style.set("color", "var(--lumo-error-color)")
                 }
             }
         }
-            .setHeader("Status")
+            .setHeader(getTranslation("booking.status"))
             .setAutoWidth(true)
 
         grid.addColumn { service -> service.createdAt.format(formatter) }
-            .setHeader("Created")
+            .setHeader(getTranslation("common.created.at"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addComponentColumn { service -> createActionButtons(service) }
-            .setHeader("Actions")
+            .setHeader(getTranslation("common.actions"))
             .setAutoWidth(true)
 
         grid.getColumns().forEach { it.setResizable(true) }
@@ -101,17 +100,17 @@ class ServiceManagementView(
         toolbar.justifyContentMode = FlexComponent.JustifyContentMode.BETWEEN
         toolbar.defaultVerticalComponentAlignment = FlexComponent.Alignment.CENTER
 
-        val title = H2("My Services")
+        val title = H2(getTranslation("provider.services"))
 
         // Create button layout for multiple buttons
         val buttonLayout = HorizontalLayout()
         buttonLayout.isSpacing = true
 
-        val exceptionButton = Button("Manage Exception Periods", Icon(VaadinIcon.EXCLAMATION)) {
+        val exceptionButton = Button(getTranslation("provider.exception.periods"), Icon(VaadinIcon.EXCLAMATION)) {
             ui.ifPresent { ui -> ui.navigate(ExceptionPeriodManagementView::class.java) }
         }
 
-        val addButton = Button("Add Service", Icon(VaadinIcon.PLUS)) {
+        val addButton = Button(getTranslation("service.add"), Icon(VaadinIcon.PLUS)) {
             showServiceForm(null)
         }
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
@@ -131,28 +130,28 @@ class ServiceManagementView(
             navigateToAvailabilities(service)
         }
         availabilityButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY)
-        availabilityButton.element.setAttribute("title", "Manage Availabilities")
+        availabilityButton.element.setAttribute("title", getTranslation("provider.availabilities"))
 
         // Edit button
         val editButton = Button(Icon(VaadinIcon.EDIT)) {
             showServiceForm(service)
         }
         editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY)
-        editButton.element.setAttribute("title", "Edit Service")
+        editButton.element.setAttribute("title", getTranslation("service.edit"))
 
         // Toggle status button
         val toggleButton = if (service.active) {
             Button(Icon(VaadinIcon.BAN)) {
                 toggleServiceStatus(service)
             }.apply {
-                element.setAttribute("title", "Deactivate Service")
+                element.setAttribute("title", getTranslation("service.inactive"))
                 addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR)
             }
         } else {
             Button(Icon(VaadinIcon.CHECK)) {
                 toggleServiceStatus(service)
             }.apply {
-                element.setAttribute("title", "Activate Service")
+                element.setAttribute("title", getTranslation("service.active"))
                 addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SUCCESS)
             }
         }
@@ -163,7 +162,10 @@ class ServiceManagementView(
 
     private fun showServiceForm(service: Service?) {
         val dialog = Dialog()
-        dialog.headerTitle = if (service == null) "Add New Service" else "Edit Service"
+        dialog.headerTitle = if (service == null)
+            getTranslation("service.add")
+        else
+            getTranslation("service.edit")
 
         val serviceForm = ServiceForm(service)
 
@@ -183,8 +185,8 @@ class ServiceManagementView(
     private fun saveService(service: Service) {
         try {
             val currentUser = SecurityUtils.getCurrentUsername()?.let {
-                userService.findByEmail(it).orElseThrow { IllegalStateException("User not found") }
-            } ?: throw IllegalStateException("User not logged in")
+                userService.findByEmail(it).orElseThrow { IllegalStateException(getTranslation("user.not.found")) }
+            } ?: throw IllegalStateException(getTranslation("user.not.logged.in"))
 
             if (service.id == 0L) {
                 // New service
@@ -193,14 +195,14 @@ class ServiceManagementView(
 
             serviceService.createService(service)
 
-            Notification.show("Service saved successfully").apply {
+            Notification.show(getTranslation("notification.saved")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
 
             updateServiceList()
         } catch (e: Exception) {
-            Notification.show("Failed to save service: ${e.message}").apply {
+            Notification.show("${getTranslation("notification.failed")}: ${e.message}").apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -211,15 +213,14 @@ class ServiceManagementView(
         try {
             serviceService.toggleServiceStatus(service.id)
 
-            val statusText = if (service.active) "deactivated" else "activated"
-            Notification.show("Service $statusText successfully").apply {
+            Notification.show(getTranslation("notification.updated")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
 
             updateServiceList()
         } catch (e: Exception) {
-            Notification.show("Failed to update service status: ${e.message}").apply {
+            Notification.show("${getTranslation("notification.failed")}: ${e.message}").apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -245,4 +246,6 @@ class ServiceManagementView(
         val services = serviceService.findAllByProvider(currentUser.id)
         grid.setItems(services)
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("provider.services")}"
 }
