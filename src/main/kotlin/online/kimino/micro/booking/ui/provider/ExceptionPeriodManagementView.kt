@@ -13,7 +13,7 @@ import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
-import com.vaadin.flow.router.PageTitle
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import jakarta.annotation.security.RolesAllowed
 import online.kimino.micro.booking.entity.ExceptionPeriod
@@ -25,12 +25,11 @@ import online.kimino.micro.booking.ui.MainLayout
 import java.time.format.DateTimeFormatter
 
 @Route(value = "exception-periods", layout = MainLayout::class)
-@PageTitle("Manage Exception Periods | Booking SaaS")
 @RolesAllowed("PROVIDER")
 class ExceptionPeriodManagementView(
     private val exceptionPeriodService: ExceptionPeriodService,
     private val userService: UserService
-) : VerticalLayout() {
+) : VerticalLayout(), HasDynamicTitle {
 
     private val grid = Grid<ExceptionPeriod>()
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
@@ -55,12 +54,12 @@ class ExceptionPeriodManagementView(
         grid.setSizeFull()
 
         grid.addColumn { exceptionPeriod -> exceptionPeriod.startTime.format(formatter) }
-            .setHeader("Start Time")
+            .setHeader(getTranslation("availability.start.time"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { exceptionPeriod -> exceptionPeriod.endTime.format(formatter) }
-            .setHeader("End Time")
+            .setHeader(getTranslation("availability.end.time"))
             .setSortable(true)
             .setAutoWidth(true)
 
@@ -76,17 +75,17 @@ class ExceptionPeriodManagementView(
                 else -> "${minutes}m"
             }
         }
-            .setHeader("Duration")
+            .setHeader(getTranslation("booking.duration"))
             .setSortable(false)
             .setAutoWidth(true)
 
         grid.addColumn { exceptionPeriod -> exceptionPeriod.description }
-            .setHeader("Description")
+            .setHeader(getTranslation("service.description"))
             .setSortable(false)
             .setAutoWidth(true)
 
         grid.addComponentColumn { exceptionPeriod -> createActionButtons(exceptionPeriod) }
-            .setHeader("Actions")
+            .setHeader(getTranslation("common.actions"))
             .setAutoWidth(true)
 
         grid.getColumns().forEach { it.setResizable(true) }
@@ -98,9 +97,9 @@ class ExceptionPeriodManagementView(
         toolbar.justifyContentMode = FlexComponent.JustifyContentMode.BETWEEN
         toolbar.defaultVerticalComponentAlignment = FlexComponent.Alignment.CENTER
 
-        val title = H2("Exception Periods")
+        val title = H2(getTranslation("provider.exception.periods"))
 
-        val addButton = Button("Add Exception Period", Icon(VaadinIcon.PLUS)) {
+        val addButton = Button(getTranslation("availability.exception.add.new"), Icon(VaadinIcon.PLUS)) {
             showExceptionPeriodForm(null)
         }
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
@@ -115,7 +114,7 @@ class ExceptionPeriodManagementView(
         infoLayout.setPadding(false)
 
         val infoText =
-            Span("Define periods when you are unavailable despite your regular schedule (vacations, personal days, etc.)")
+            Span(getTranslation("availability.inactive.warning"))
         infoText.element.style.set("font-style", "italic")
 
         infoLayout.add(infoText)
@@ -132,14 +131,14 @@ class ExceptionPeriodManagementView(
             showExceptionPeriodForm(exceptionPeriod)
         }
         editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY)
-        editButton.element.setAttribute("title", "Edit")
+        editButton.element.setAttribute("title", getTranslation("common.edit"))
 
         // Delete button
         val deleteButton = Button(Icon(VaadinIcon.TRASH)) {
             deleteExceptionPeriod(exceptionPeriod)
         }
         deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR)
-        deleteButton.element.setAttribute("title", "Delete")
+        deleteButton.element.setAttribute("title", getTranslation("common.delete"))
 
         buttonLayout.add(editButton, deleteButton)
         return buttonLayout
@@ -147,10 +146,13 @@ class ExceptionPeriodManagementView(
 
     private fun showExceptionPeriodForm(exceptionPeriod: ExceptionPeriod?) {
         val dialog = Dialog()
-        dialog.headerTitle = if (exceptionPeriod == null) "Add New Exception Period" else "Edit Exception Period"
+        dialog.headerTitle = if (exceptionPeriod == null)
+            getTranslation("availability.exception.add.new")
+        else
+            getTranslation("availability.exception.edit")
 
         val currentUser = SecurityUtils.getCurrentUsername()?.let {
-            userService.findByEmail(it).orElseThrow { IllegalStateException("User not found") }
+            userService.findByEmail(it).orElseThrow { IllegalStateException(getTranslation("user.not.found")) }
         } ?: return
 
         val exceptionPeriodForm = ExceptionPeriodForm(exceptionPeriod, currentUser)
@@ -173,27 +175,27 @@ class ExceptionPeriodManagementView(
             if (exceptionPeriod.id == 0L) {
                 // New exception period
                 val currentUser = SecurityUtils.getCurrentUsername()?.let {
-                    userService.findByEmail(it).orElseThrow { IllegalStateException("User not found") }
-                } ?: throw IllegalStateException("User not logged in")
+                    userService.findByEmail(it).orElseThrow { IllegalStateException(getTranslation("user.not.found")) }
+                } ?: throw IllegalStateException(getTranslation("user.not.logged.in"))
 
                 exceptionPeriod.provider = currentUser
             }
 
             // Validate that end time is after start time
             if (!exceptionPeriod.isValid()) {
-                throw IllegalArgumentException("End time must be after start time")
+                throw IllegalArgumentException(getTranslation("validation.availability.end.after.start"))
             }
 
             exceptionPeriodService.createExceptionPeriod(exceptionPeriod)
 
-            Notification.show("Exception period saved successfully").apply {
+            Notification.show(getTranslation("availability.saved")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
 
             updateExceptionPeriodList()
         } catch (e: Exception) {
-            Notification.show("Failed to save exception period: ${e.message}").apply {
+            Notification.show(getTranslation("availability.save.failed", e.message ?: "")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -202,7 +204,7 @@ class ExceptionPeriodManagementView(
 
     private fun deleteExceptionPeriod(exceptionPeriod: ExceptionPeriod) {
         val dialog = Dialog()
-        dialog.headerTitle = "Delete Exception Period"
+        dialog.headerTitle = getTranslation("availability.delete")
 
         val content = VerticalLayout()
         content.isPadding = true
@@ -212,22 +214,22 @@ class ExceptionPeriodManagementView(
         val endTime = exceptionPeriod.endTime.format(formatter)
 
         content.add(
-            Span("Are you sure you want to delete this exception period?"),
+            Span(getTranslation("availability.delete.confirm")),
             Span("${startTime} to ${endTime}")
         )
 
         val buttonLayout = HorizontalLayout()
         buttonLayout.justifyContentMode = FlexComponent.JustifyContentMode.END
 
-        val cancelButton = Button("Cancel") {
+        val cancelButton = Button(getTranslation("common.cancel")) {
             dialog.close()
         }
 
-        val confirmButton = Button("Delete") {
+        val confirmButton = Button(getTranslation("common.delete")) {
             try {
                 exceptionPeriodService.deleteExceptionPeriod(exceptionPeriod.id)
 
-                Notification.show("Exception period deleted").apply {
+                Notification.show(getTranslation("availability.deleted")).apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_SUCCESS)
                 }
@@ -235,7 +237,7 @@ class ExceptionPeriodManagementView(
                 dialog.close()
                 updateExceptionPeriodList()
             } catch (e: Exception) {
-                Notification.show("Failed to delete exception period: ${e.message}").apply {
+                Notification.show(getTranslation("availability.delete.failed", e.message ?: "")).apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_ERROR)
                 }
@@ -263,4 +265,6 @@ class ExceptionPeriodManagementView(
         val exceptionPeriods = exceptionPeriodService.findAllByProviderId(currentUser.id)
         grid.setItems(exceptionPeriods)
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("provider.exception.periods")}"
 }
