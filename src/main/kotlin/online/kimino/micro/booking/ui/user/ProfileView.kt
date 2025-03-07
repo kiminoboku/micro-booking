@@ -15,6 +15,7 @@ import com.vaadin.flow.router.PageTitle
 import com.vaadin.flow.router.Route
 import jakarta.annotation.security.PermitAll
 import online.kimino.micro.booking.entity.User
+import online.kimino.micro.booking.entity.UserRole
 import online.kimino.micro.booking.security.SecurityUtils
 import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.MainLayout
@@ -30,6 +31,7 @@ class ProfileView(
     private val lastName = TextField("Last Name")
     private val email = EmailField("Email")
     private val phoneNumber = TextField("Phone Number")
+    private val companyName = TextField("Company Name")
 
     private val currentPassword = PasswordField("Current Password")
     private val newPassword = PasswordField("New Password")
@@ -59,6 +61,9 @@ class ProfileView(
         email.isRequired = true
         email.isReadOnly = true  // Email cannot be changed
 
+        // Company name is only visible for providers
+        companyName.isVisible = SecurityUtils.hasRole(UserRole.PROVIDER)
+
         configureUserBinder()
     }
 
@@ -78,6 +83,9 @@ class ProfileView(
 
         userBinder.forField(phoneNumber)
             .bind("phoneNumber")
+
+        userBinder.forField(companyName)
+            .bind("companyName")
     }
 
     private fun createProfileForm(): VerticalLayout {
@@ -92,7 +100,16 @@ class ProfileView(
             firstName,
             lastName,
             email,
-            phoneNumber,
+            phoneNumber
+        )
+
+        // Only add company name field for providers
+        if (SecurityUtils.hasRole(UserRole.PROVIDER)) {
+            companyName.placeholder = "Your business or company name"
+            form.add(companyName)
+        }
+
+        form.add(
             Button("Save Profile") { saveProfile() }
                 .apply { addThemeVariants(ButtonVariant.LUMO_PRIMARY) }
         )

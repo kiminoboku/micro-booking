@@ -81,7 +81,16 @@ class CreateBookingView(
 
     private fun setupProviderSelector() {
         providerSelector.setItems(userService.getAllProviders())
-        providerSelector.setItemLabelGenerator { it.fullName() }
+
+        // Update item label generator to include company name if available
+        providerSelector.setItemLabelGenerator { provider ->
+            if (!provider.companyName.isNullOrBlank()) {
+                "${provider.fullName()} - ${provider.companyName}"
+            } else {
+                provider.fullName()
+            }
+        }
+
         providerSelector.width = "100%"
         providerSelector.placeholder = "First select a service provider"
 

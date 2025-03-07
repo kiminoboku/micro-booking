@@ -25,6 +25,9 @@ data class User(
     @Column
     var phoneNumber: String? = null,
 
+    @Column
+    var companyName: String? = null,
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var role: UserRole = UserRole.USER,

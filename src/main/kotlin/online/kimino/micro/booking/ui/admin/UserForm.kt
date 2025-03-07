@@ -25,6 +25,7 @@ class UserForm(user: User?) : FormLayout() {
     private val lastName = TextField("Last Name")
     private val email = EmailField("Email")
     private val phoneNumber = TextField("Phone Number")
+    private val companyName = TextField("Company Name")
     private val role = ComboBox<UserRole>("Role")
     private val enabled = Checkbox("Enabled")
     private val password = PasswordField("Password")
@@ -51,12 +52,21 @@ class UserForm(user: User?) : FormLayout() {
         // Set password field visibility based on whether this is a new user
         password.isVisible = currentUser.id == 0L
 
+        // Set company name field visibility based on role
+        companyName.isVisible = currentUser.role == UserRole.PROVIDER
+
+        // Add listener to show/hide company name field when role changes
+        role.addValueChangeListener { event ->
+            companyName.isVisible = event.value == UserRole.PROVIDER
+        }
+
         add(
             firstName,
             lastName,
             email,
             phoneNumber,
             role,
+            companyName,
             enabled,
             password,
             createButtonsLayout()
@@ -70,6 +80,8 @@ class UserForm(user: User?) : FormLayout() {
 
         role.setItems(UserRole.entries.toList())
         role.isRequired = true
+
+        companyName.placeholder = "Enter business name (for providers only)"
 
         // Make password required for new users
         if (currentUser.id == 0L) {
@@ -95,6 +107,9 @@ class UserForm(user: User?) : FormLayout() {
 
         binder.forField(phoneNumber)
             .bind("phoneNumber")
+
+        binder.forField(companyName)
+            .bind("companyName")
 
         binder.forField(role)
             .asRequired("Role is required")

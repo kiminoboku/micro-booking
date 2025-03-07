@@ -58,6 +58,7 @@ class DataInitializer {
                 firstName = "John",
                 lastName = "Doe",
                 phoneNumber = "123-456-7891",
+                companyName = "John's Hair Salon", // Added company name
                 role = UserRole.PROVIDER,
                 enabled = true
             )
@@ -69,6 +70,7 @@ class DataInitializer {
                 firstName = "Jane",
                 lastName = "Smith",
                 phoneNumber = "123-456-7892",
+                companyName = "Jane's Spa & Wellness", // Added company name
                 role = UserRole.PROVIDER,
                 enabled = true
             )
