@@ -13,7 +13,7 @@ import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
-import com.vaadin.flow.router.PageTitle
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLink
 import jakarta.annotation.security.RolesAllowed
@@ -22,11 +22,10 @@ import online.kimino.micro.booking.service.ServiceService
 import online.kimino.micro.booking.ui.MainLayout
 
 @Route(value = "admin/services", layout = MainLayout::class)
-@PageTitle("Service Management | Booking SaaS")
 @RolesAllowed("ADMIN")
 class AdminServicesView(
     private val serviceService: ServiceService
-) : VerticalLayout() {
+) : VerticalLayout(), HasDynamicTitle {
 
     private val grid = Grid<Service>()
 
@@ -47,15 +46,15 @@ class AdminServicesView(
         header.setPadding(false)
         header.setSpacing(true)
 
-        header.add(H2("Service Management"))
+        header.add(H2(getTranslation("admin.services")))
 
         val navLayout = HorizontalLayout()
         navLayout.setWidthFull()
         navLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.START)
         navLayout.add(
-            RouterLink("Dashboard", AdminDashboardView::class.java),
-            RouterLink("Users", AdminUsersView::class.java),
-            RouterLink("Bookings", AdminBookingsView::class.java)
+            RouterLink(getTranslation("dashboard.title"), AdminDashboardView::class.java),
+            RouterLink(getTranslation("user.title.plural"), AdminUsersView::class.java),
+            RouterLink(getTranslation("admin.bookings"), AdminBookingsView::class.java)
         )
 
         header.add(navLayout)
@@ -67,41 +66,41 @@ class AdminServicesView(
         grid.setSizeFull()
 
         grid.addColumn { service -> service.name }
-            .setHeader("Service Name")
+            .setHeader(getTranslation("service.name"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { service -> service.provider!!.fullName() }
-            .setHeader("Provider")
+            .setHeader(getTranslation("booking.provider"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { service -> service.duration }
-            .setHeader("Duration (min)")
+            .setHeader(getTranslation("service.duration"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { service -> "$${service.price}" }
-            .setHeader("Price")
+            .setHeader(getTranslation("service.price"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addComponentColumn { service ->
             if (service.active) {
-                Span("Active").apply {
+                Span(getTranslation("service.active")).apply {
                     element.style.set("color", "var(--lumo-success-color)")
                 }
             } else {
-                Span("Inactive").apply {
+                Span(getTranslation("service.inactive")).apply {
                     element.style.set("color", "var(--lumo-error-color)")
                 }
             }
         }
-            .setHeader("Status")
+            .setHeader(getTranslation("booking.status"))
             .setAutoWidth(true)
 
         grid.addComponentColumn { service -> createServiceActionButtons(service) }
-            .setHeader("Actions")
+            .setHeader(getTranslation("common.actions"))
             .setAutoWidth(true)
 
         grid.getColumns().forEach { it.setResizable(true) }
@@ -119,14 +118,14 @@ class AdminServicesView(
             Button(Icon(VaadinIcon.BAN)) {
                 toggleServiceStatus(service)
             }.apply {
-                element.setAttribute("title", "Deactivate Service")
+                element.setAttribute("title", getTranslation("service.inactive"))
                 addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR)
             }
         } else {
             Button(Icon(VaadinIcon.CHECK)) {
                 toggleServiceStatus(service)
             }.apply {
-                element.setAttribute("title", "Activate Service")
+                element.setAttribute("title", getTranslation("service.active"))
                 addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SUCCESS)
             }
         }
@@ -135,7 +134,7 @@ class AdminServicesView(
         val detailsButton = Button(Icon(VaadinIcon.INFO_CIRCLE)) {
             showServiceDetails(service)
         }.apply {
-            element.setAttribute("title", "View Details")
+            element.setAttribute("title", getTranslation("service.details"))
             addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY)
         }
 
@@ -147,15 +146,14 @@ class AdminServicesView(
         try {
             serviceService.toggleServiceStatus(service.id)
 
-            val statusText = if (service.active) "deactivated" else "activated"
-            Notification.show("Service $statusText successfully").apply {
+            Notification.show(getTranslation("notification.updated")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
 
             updateServiceList()
         } catch (e: Exception) {
-            Notification.show("Failed to update service status: ${e.message}").apply {
+            Notification.show("${getTranslation("notification.failed")}: ${e.message}").apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -164,7 +162,7 @@ class AdminServicesView(
 
     private fun showServiceDetails(service: Service) {
         val dialog = com.vaadin.flow.component.dialog.Dialog()
-        dialog.headerTitle = "Service Details"
+        dialog.headerTitle = getTranslation("service.details")
 
         val content = VerticalLayout()
         content.isPadding = true
@@ -172,14 +170,14 @@ class AdminServicesView(
         content.width = "400px"
 
         // Create detail items
-        val nameDetail = createDetailItem("Name:", service.name)
-        val providerDetail = createDetailItem("Provider:", service.provider!!.fullName())
-        val durationDetail = createDetailItem("Duration:", "${service.duration} minutes")
-        val priceDetail = createDetailItem("Price:", "$${service.price}")
-        val statusDetail = createDetailItem("Status:", if (service.active) "Active" else "Inactive")
-        val descriptionDetail = createDetailItem("Description:", service.description ?: "No description")
+        val nameDetail = createDetailItem("${getTranslation("service.name")}:", service.name)
+        val providerDetail = createDetailItem("${getTranslation("booking.provider")}:", service.provider!!.fullName())
+        val durationDetail = createDetailItem("${getTranslation("service.duration")}:", "${service.duration} ${getTranslation("common.minutes", arrayOf(service.duration))}")
+        val priceDetail = createDetailItem("${getTranslation("service.price")}:", "$${service.price}")
+        val statusDetail = createDetailItem("${getTranslation("booking.status")}:", if (service.active) getTranslation("service.active") else getTranslation("service.inactive"))
+        val descriptionDetail = createDetailItem("${getTranslation("service.description")}:", service.description ?: getTranslation("service.description"))
         val createdAtDetail = createDetailItem(
-            "Created:",
+            "${getTranslation("common.created.at")}:",
             service.createdAt.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
         )
 
@@ -193,7 +191,7 @@ class AdminServicesView(
             createdAtDetail
         )
 
-        val closeButton = Button("Close") {
+        val closeButton = Button(getTranslation("common.close")) {
             dialog.close()
         }
 
@@ -221,4 +219,6 @@ class AdminServicesView(
     private fun updateServiceList() {
         grid.setItems(serviceService.findAll())
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("admin.services")}"
 }
