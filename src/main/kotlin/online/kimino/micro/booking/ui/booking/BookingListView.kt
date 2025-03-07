@@ -16,7 +16,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.tabs.Tab
 import com.vaadin.flow.component.tabs.Tabs
 import com.vaadin.flow.component.textfield.TextArea
-import com.vaadin.flow.router.PageTitle
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import jakarta.annotation.security.PermitAll
 import online.kimino.micro.booking.entity.Booking
@@ -29,22 +29,21 @@ import online.kimino.micro.booking.ui.MainLayout
 import java.time.format.DateTimeFormatter
 
 @Route(value = "bookings", layout = MainLayout::class)
-@PageTitle("My Bookings | Booking SaaS")
 @PermitAll
 class BookingListView(
     private val bookingService: BookingService,
     private val userService: UserService
-) : VerticalLayout() {
+) : VerticalLayout(), HasDynamicTitle {
 
     private val grid = Grid<Booking>()
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
     private val tabs: Tabs
-    private val allTab = Tab("All Bookings")
-    private val pendingTab = Tab("Pending")
-    private val confirmedTab = Tab("Confirmed")
-    private val completedTab = Tab("Completed")
-    private val cancelledTab = Tab("Cancelled")
+    private val allTab = Tab(getTranslation("booking.list"))
+    private val pendingTab = Tab(getTranslation("booking.status.pending"))
+    private val confirmedTab = Tab(getTranslation("booking.status.confirmed"))
+    private val completedTab = Tab(getTranslation("booking.status.completed"))
+    private val cancelledTab = Tab(getTranslation("booking.status.cancelled"))
 
     init {
         addClassName("booking-list-view")
@@ -56,9 +55,9 @@ class BookingListView(
         configureGrid()
 
         val title = if (SecurityUtils.hasRole(UserRole.PROVIDER)) {
-            "Customer Bookings"
+            getTranslation("booking.customer")
         } else {
-            "My Bookings"
+            getTranslation("booking.list")
         }
 
         add(
@@ -75,38 +74,38 @@ class BookingListView(
         grid.setSizeFull()
 
         grid.addColumn { booking -> booking.service.name }
-            .setHeader("Service")
+            .setHeader(getTranslation("booking.service"))
             .setSortable(true)
             .setAutoWidth(true)
 
         // Different columns based on role
         if (SecurityUtils.hasRole(UserRole.PROVIDER)) {
             grid.addColumn { booking -> booking.user.fullName() }
-                .setHeader("Customer")
+                .setHeader(getTranslation("booking.customer"))
                 .setSortable(true)
                 .setAutoWidth(true)
 
             grid.addColumn { booking -> booking.user.email }
-                .setHeader("Email")
+                .setHeader(getTranslation("booking.customer.email"))
                 .setAutoWidth(true)
         } else {
             grid.addColumn { booking -> booking.service.provider!!.fullName() }
-                .setHeader("Provider")
+                .setHeader(getTranslation("booking.provider"))
                 .setSortable(true)
                 .setAutoWidth(true)
         }
 
         grid.addColumn { booking -> booking.startTime.format(formatter) }
-            .setHeader("Start Time")
+            .setHeader(getTranslation("booking.start.time"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { booking -> booking.endTime.format(formatter) }
-            .setHeader("End Time")
+            .setHeader(getTranslation("booking.end.time"))
             .setAutoWidth(true)
 
         grid.addComponentColumn { booking ->
-            val statusSpan = Span(booking.status.name)
+            val statusSpan = Span(getTranslation("booking.status.${booking.status.name.lowercase()}"))
 
             // Style based on status
             when (booking.status) {
@@ -118,11 +117,11 @@ class BookingListView(
 
             statusSpan
         }
-            .setHeader("Status")
+            .setHeader(getTranslation("booking.status"))
             .setAutoWidth(true)
 
         grid.addComponentColumn { booking -> createActionButtons(booking) }
-            .setHeader("Actions")
+            .setHeader(getTranslation("common.actions"))
             .setAutoWidth(true)
 
         grid.getColumns().forEach { it.setResizable(true) }
@@ -137,7 +136,7 @@ class BookingListView(
             showBookingDetails(booking)
         }
         viewButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY)
-        viewButton.element.setAttribute("title", "View Details")
+        viewButton.element.setAttribute("title", getTranslation("booking.action.details"))
 
         buttonLayout.add(viewButton)
 
@@ -154,7 +153,7 @@ class BookingListView(
                         ButtonVariant.LUMO_SUCCESS,
                         ButtonVariant.LUMO_TERTIARY
                     )
-                    confirmButton.element.setAttribute("title", "Confirm")
+                    confirmButton.element.setAttribute("title", getTranslation("common.confirm"))
 
                     // Reject button
                     val rejectButton = Button(Icon(VaadinIcon.CLOSE_SMALL)) {
@@ -165,7 +164,7 @@ class BookingListView(
                         ButtonVariant.LUMO_ERROR,
                         ButtonVariant.LUMO_TERTIARY
                     )
-                    rejectButton.element.setAttribute("title", "Reject")
+                    rejectButton.element.setAttribute("title", getTranslation("booking.cancel"))
 
                     buttonLayout.add(confirmButton, rejectButton)
                 }
@@ -180,7 +179,7 @@ class BookingListView(
                         ButtonVariant.LUMO_SUCCESS,
                         ButtonVariant.LUMO_TERTIARY
                     )
-                    completeButton.element.setAttribute("title", "Mark as Completed")
+                    completeButton.element.setAttribute("title", getTranslation("booking.complete"))
 
                     // Cancel button
                     val cancelButton = Button(Icon(VaadinIcon.CLOSE_CIRCLE)) {
@@ -191,7 +190,7 @@ class BookingListView(
                         ButtonVariant.LUMO_ERROR,
                         ButtonVariant.LUMO_TERTIARY
                     )
-                    cancelButton.element.setAttribute("title", "Cancel")
+                    cancelButton.element.setAttribute("title", getTranslation("booking.cancel"))
 
                     buttonLayout.add(completeButton, cancelButton)
                 }
@@ -211,7 +210,7 @@ class BookingListView(
                     ButtonVariant.LUMO_ERROR,
                     ButtonVariant.LUMO_TERTIARY
                 )
-                cancelButton.element.setAttribute("title", "Cancel")
+                cancelButton.element.setAttribute("title", getTranslation("booking.cancel"))
 
                 buttonLayout.add(cancelButton)
             }
@@ -257,7 +256,7 @@ class BookingListView(
 
     private fun showBookingDetails(booking: Booking) {
         val dialog = Dialog()
-        dialog.headerTitle = "Booking Details"
+        dialog.headerTitle = getTranslation("booking.details")
 
         val content = VerticalLayout()
         content.isPadding = true
@@ -265,32 +264,32 @@ class BookingListView(
         content.width = "400px"
 
         content.add(
-            createDetailItem("Service:", booking.service.name),
-            createDetailItem("Provider:", booking.service.provider!!.fullName()),
-            createDetailItem("Customer:", booking.user.fullName()),
-            createDetailItem("Start Time:", booking.startTime.format(formatter)),
-            createDetailItem("End Time:", booking.endTime.format(formatter)),
-            createDetailItem("Status:", booking.status.name),
-            createDetailItem("Notes:", booking.notes ?: "No notes")
+            createDetailItem(getTranslation("booking.service") + ":", booking.service.name),
+            createDetailItem(getTranslation("booking.provider") + ":", booking.service.provider!!.fullName()),
+            createDetailItem(getTranslation("booking.customer") + ":", booking.user.fullName()),
+            createDetailItem(getTranslation("booking.start.time") + ":", booking.startTime.format(formatter)),
+            createDetailItem(getTranslation("booking.end.time") + ":", booking.endTime.format(formatter)),
+            createDetailItem(getTranslation("booking.status") + ":", getTranslation("booking.status.${booking.status.name.lowercase()}")),
+            createDetailItem(getTranslation("notes.plural") + ":", booking.notes ?: getTranslation("notes.plural"))
         )
 
         // Add text area for adding/editing notes if the booking is not cancelled or completed
         if (booking.status == BookingStatus.PENDING || booking.status == BookingStatus.CONFIRMED) {
-            val notesField = TextArea("Update Notes")
+            val notesField = TextArea(getTranslation("notes.plural"))
             notesField.value = booking.notes ?: ""
             notesField.width = "100%"
 
-            val saveButton = Button("Save Notes") {
+            val saveButton = Button(getTranslation("notes.save")) {
                 try {
                     bookingService.updateBookingNotes(booking.id, notesField.value)
-                    Notification.show("Notes updated").apply {
+                    Notification.show(getTranslation("notes.updated")).apply {
                         position = Notification.Position.MIDDLE
                         addThemeVariants(NotificationVariant.LUMO_SUCCESS)
                     }
                     dialog.close()
                     updateBookingList()
                 } catch (e: Exception) {
-                    Notification.show("Failed to update notes: ${e.message}").apply {
+                    Notification.show(getTranslation("notes.update.fail", arrayOf(e.message))).apply {
                         position = Notification.Position.MIDDLE
                         addThemeVariants(NotificationVariant.LUMO_ERROR)
                     }
@@ -320,13 +319,13 @@ class BookingListView(
     private fun confirmBooking(booking: Booking) {
         try {
             bookingService.updateBookingStatus(booking.id, BookingStatus.CONFIRMED)
-            Notification.show("Booking confirmed").apply {
+            Notification.show(getTranslation("booking.status.updated.to", arrayOf(getTranslation("booking.status.confirmed")))).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
             updateBookingList()
         } catch (e: Exception) {
-            Notification.show("Failed to confirm booking: ${e.message}").apply {
+            Notification.show(getTranslation("booking.status.update.failed", arrayOf(e.message))).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -336,13 +335,13 @@ class BookingListView(
     private fun completeBooking(booking: Booking) {
         try {
             bookingService.updateBookingStatus(booking.id, BookingStatus.COMPLETED)
-            Notification.show("Booking marked as completed").apply {
+            Notification.show(getTranslation("booking.status.updated.to", arrayOf(getTranslation("booking.status.completed")))).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
             updateBookingList()
         } catch (e: Exception) {
-            Notification.show("Failed to complete booking: ${e.message}").apply {
+            Notification.show(getTranslation("booking.status.update.failed", arrayOf(e.message))).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -351,36 +350,36 @@ class BookingListView(
 
     private fun cancelBooking(booking: Booking) {
         val dialog = Dialog()
-        dialog.headerTitle = "Cancel Booking"
+        dialog.headerTitle = getTranslation("booking.cancel")
 
         val content = VerticalLayout()
         content.isPadding = true
-        content.setSpacing(true)
+        content.isSpacing = true
 
         content.add(
-            Span("Are you sure you want to cancel this booking?"),
-            createDetailItem("Service:", booking.service.name),
-            createDetailItem("Time:", booking.startTime.format(formatter))
+            Span(getTranslation("booking.cancel") + "?"),
+            createDetailItem(getTranslation("booking.service") + ":", booking.service.name),
+            createDetailItem(getTranslation("booking.time") + ":", booking.startTime.format(formatter))
         )
 
         val buttonLayout = HorizontalLayout()
         buttonLayout.justifyContentMode = FlexComponent.JustifyContentMode.END
 
-        val cancelButton = Button("No, Keep it") {
+        val cancelButton = Button(getTranslation("common.no.keep.it")) {
             dialog.close()
         }
 
-        val confirmButton = Button("Yes, Cancel Booking") {
+        val confirmButton = Button(getTranslation("common.yes.cancel")) {
             try {
                 bookingService.updateBookingStatus(booking.id, BookingStatus.CANCELLED)
-                Notification.show("Booking cancelled").apply {
+                Notification.show(getTranslation("booking.status.updated.to", arrayOf(getTranslation("booking.status.cancelled")))).apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_SUCCESS)
                 }
                 dialog.close()
                 updateBookingList()
             } catch (e: Exception) {
-                Notification.show("Failed to cancel booking: ${e.message}").apply {
+                Notification.show(getTranslation("booking.status.update.failed", arrayOf(e.message))).apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_ERROR)
                 }
@@ -394,4 +393,6 @@ class BookingListView(
         dialog.add(content)
         dialog.open()
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("booking.list")}"
 }
