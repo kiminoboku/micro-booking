@@ -15,8 +15,8 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.router.BeforeEvent
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.HasUrlParameter
-import com.vaadin.flow.router.PageTitle
 import com.vaadin.flow.router.Route
 import jakarta.annotation.security.RolesAllowed
 import online.kimino.micro.booking.entity.Availability
@@ -29,12 +29,11 @@ import java.time.format.TextStyle
 import java.util.*
 
 @Route(value = "availabilities", layout = MainLayout::class)
-@PageTitle("Manage Availabilities | Booking SaaS")
 @RolesAllowed("PROVIDER")
 class AvailabilityManagementView(
     private val availabilityService: AvailabilityService,
     private val serviceService: ServiceService
-) : VerticalLayout(), HasUrlParameter<Long> {
+) : VerticalLayout(), HasUrlParameter<Long>, HasDynamicTitle {
 
     private val grid = Grid<Availability>()
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -52,7 +51,7 @@ class AvailabilityManagementView(
     override fun setParameter(event: BeforeEvent, serviceId: Long) {
         try {
             currentService = serviceService.findById(serviceId).orElseThrow {
-                IllegalArgumentException("Service not found with id $serviceId")
+                IllegalArgumentException(getTranslation("service.not.found", serviceId))
             }
 
             removeAll()
@@ -65,7 +64,7 @@ class AvailabilityManagementView(
 
             updateAvailabilityList()
         } catch (e: Exception) {
-            Notification.show("Error: ${e.message}").apply {
+            Notification.show(getTranslation("notification.error", e.message)).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -83,22 +82,22 @@ class AvailabilityManagementView(
         grid.addColumn { availability ->
             availability.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
         }
-            .setHeader("Day")
+            .setHeader(getTranslation("availability.day.of.week"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { availability -> availability.startTime.format(timeFormatter) }
-            .setHeader("Start Time")
+            .setHeader(getTranslation("availability.start.time"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { availability -> availability.endTime.format(timeFormatter) }
-            .setHeader("End Time")
+            .setHeader(getTranslation("availability.end.time"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addComponentColumn { availability -> createActionButtons(availability) }
-            .setHeader("Actions")
+            .setHeader(getTranslation("common.actions"))
             .setAutoWidth(true)
 
         grid.getColumns().forEach { it.setResizable(true) }
@@ -110,15 +109,15 @@ class AvailabilityManagementView(
         toolbar.justifyContentMode = FlexComponent.JustifyContentMode.BETWEEN
         toolbar.defaultVerticalComponentAlignment = FlexComponent.Alignment.CENTER
 
-        val title = H2("Manage Availabilities")
+        val title = H2(getTranslation("availability.manage"))
 
-        val backButton = Button("Back to Services", Icon(VaadinIcon.ARROW_LEFT)) {
+        val backButton = Button(getTranslation("availability.back.to.services"), Icon(VaadinIcon.ARROW_LEFT)) {
             ui.ifPresent { ui ->
                 ui.navigate(ServiceManagementView::class.java)
             }
         }
 
-        val addButton = Button("Add Availability", Icon(VaadinIcon.PLUS)) {
+        val addButton = Button(getTranslation("availability.add"), Icon(VaadinIcon.PLUS)) {
             showAvailabilityForm(null)
         }
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
@@ -138,14 +137,14 @@ class AvailabilityManagementView(
         val service = currentService ?: return infoLayout
 
         val nameHeading = H3(service.name)
-        val statusText = if (service.active) "Active" else "Inactive"
-        val statusSpan = Span("Status: $statusText")
+        val statusText = if (service.active) getTranslation("service.active") else getTranslation("service.inactive")
+        val statusSpan = Span("${getTranslation("availability.status")}: $statusText")
         statusSpan.element.style.set(
             "color",
             if (service.active) "var(--lumo-success-color)" else "var(--lumo-error-color)"
         )
 
-        val durationSpan = Span("Duration: ${service.duration} minutes")
+        val durationSpan = Span("${getTranslation("availability.duration")}: ${getTranslation("common.minutes", service.duration)}")
 
         infoLayout.add(nameHeading, statusSpan, durationSpan)
 
@@ -156,7 +155,7 @@ class AvailabilityManagementView(
             val warningIcon = Icon(VaadinIcon.EXCLAMATION_CIRCLE)
             warningIcon.color = "var(--lumo-error-color)"
 
-            val warningText = Span("Note: This service is currently inactive and won't be visible to customers")
+            val warningText = Span(getTranslation("availability.inactive.warning"))
             warningText.element.style.set("color", "var(--lumo-error-color)")
 
             warningLayout.add(warningIcon, warningText)
@@ -176,14 +175,14 @@ class AvailabilityManagementView(
             showAvailabilityForm(availability)
         }
         editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY)
-        editButton.element.setAttribute("title", "Edit")
+        editButton.element.setAttribute("title", getTranslation("common.edit"))
 
         // Delete button
         val deleteButton = Button(Icon(VaadinIcon.TRASH)) {
             deleteAvailability(availability)
         }
         deleteButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR)
-        deleteButton.element.setAttribute("title", "Delete")
+        deleteButton.element.setAttribute("title", getTranslation("common.delete"))
 
         buttonLayout.add(editButton, deleteButton)
         return buttonLayout
@@ -191,7 +190,10 @@ class AvailabilityManagementView(
 
     private fun showAvailabilityForm(availability: Availability?) {
         val dialog = Dialog()
-        dialog.headerTitle = if (availability == null) "Add New Availability" else "Edit Availability"
+        dialog.headerTitle = if (availability == null)
+            getTranslation("availability.add.new")
+        else
+            getTranslation("availability.edit")
 
         val service = currentService ?: return
 
@@ -214,24 +216,25 @@ class AvailabilityManagementView(
         try {
             if (availability.id == 0L) {
                 // New availability
-                availability.service = currentService ?: throw IllegalStateException("Current service is null")
+                availability.service = currentService ?:
+                        throw IllegalStateException(getTranslation("availability.error.service.null"))
             }
 
             // Validate that end time is after start time
             if (!availability.isValid()) {
-                throw IllegalArgumentException("End time must be after start time")
+                throw IllegalArgumentException(getTranslation("validation.availability.end.after.start"))
             }
 
             availabilityService.createAvailability(availability)
 
-            Notification.show("Availability saved successfully").apply {
+            Notification.show(getTranslation("availability.saved")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
 
             updateAvailabilityList()
         } catch (e: Exception) {
-            Notification.show("Failed to save availability: ${e.message}").apply {
+            Notification.show(getTranslation("availability.save.failed", e.message ?: "")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -240,32 +243,32 @@ class AvailabilityManagementView(
 
     private fun deleteAvailability(availability: Availability) {
         val dialog = Dialog()
-        dialog.headerTitle = "Delete Availability"
+        dialog.headerTitle = getTranslation("availability.delete")
 
         val content = VerticalLayout()
         content.isPadding = true
-        content.setSpacing(true)
+        content.isSpacing = true
 
         val day = availability.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
         val time = "${availability.startTime.format(timeFormatter)} - ${availability.endTime.format(timeFormatter)}"
 
         content.add(
-            Span("Are you sure you want to delete this availability?"),
+            Span(getTranslation("availability.delete.confirm")),
             Span("$day, $time")
         )
 
         val buttonLayout = HorizontalLayout()
         buttonLayout.justifyContentMode = FlexComponent.JustifyContentMode.END
 
-        val cancelButton = Button("Cancel") {
+        val cancelButton = Button(getTranslation("common.cancel")) {
             dialog.close()
         }
 
-        val confirmButton = Button("Delete") {
+        val confirmButton = Button(getTranslation("common.delete")) {
             try {
                 availabilityService.deleteAvailability(availability.id)
 
-                Notification.show("Availability deleted").apply {
+                Notification.show(getTranslation("availability.deleted")).apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_SUCCESS)
                 }
@@ -273,7 +276,7 @@ class AvailabilityManagementView(
                 dialog.close()
                 updateAvailabilityList()
             } catch (e: Exception) {
-                Notification.show("Failed to delete availability: ${e.message}").apply {
+                Notification.show(getTranslation("availability.delete.failed", e.message ?: "")).apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_ERROR)
                 }
@@ -299,4 +302,6 @@ class AvailabilityManagementView(
         val availabilities = availabilityService.findAllByServiceId(service.id)
         grid.setItems(availabilities)
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("provider.availabilities")}"
 }
