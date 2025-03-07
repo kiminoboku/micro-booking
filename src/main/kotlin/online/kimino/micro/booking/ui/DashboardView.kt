@@ -21,12 +21,11 @@ import java.time.format.DateTimeFormatter
 
 @Route(value = "", layout = MainLayout::class)
 @RouteAlias(value = "dashboard", layout = MainLayout::class)
-@PageTitle("Dashboard | Booking SaaS")
 @PermitAll
 class DashboardView(
     private val bookingService: BookingService,
     private val userService: UserService
-) : VerticalLayout(), BeforeEnterObserver {
+) : VerticalLayout(), BeforeEnterObserver, HasDynamicTitle {
 
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
@@ -35,7 +34,7 @@ class DashboardView(
         setSizeFull()
 
         add(
-            H2("Dashboard"),
+            H2(getTranslation("dashboard.title")),
             createStatsLayout(),
             createBookingStatusVisualization(),
             createUpcomingBookingsGrid()
@@ -54,22 +53,31 @@ class DashboardView(
         when (SecurityUtils.getCurrentUserRole()) {
             UserRole.ADMIN -> {
                 stats.add(
-                    createStat("Total Users", userService.getAllUsers().size.toString()),
-                    createStat("Total Providers", userService.getAllProviders().size.toString()),
-                    createStat("Total Bookings", bookingService.findAllByUserId(currentUser?.id ?: 0).size.toString())
+                    createStat(getTranslation("admin.stats.total.users"), userService.getAllUsers().size.toString()),
+                    createStat(
+                        getTranslation("admin.stats.service.providers"),
+                        userService.getAllProviders().size.toString()
+                    ),
+                    createStat(
+                        getTranslation("admin.stats.total.bookings"),
+                        bookingService.findAllByUserId(currentUser?.id ?: 0).size.toString()
+                    )
                 )
             }
 
             UserRole.PROVIDER -> {
                 val providerId = currentUser?.id ?: 0
                 stats.add(
-                    createStat("Total Bookings", bookingService.findAllByProviderId(providerId).size.toString()),
                     createStat(
-                        "Pending Bookings",
+                        getTranslation("admin.stats.total.bookings"),
+                        bookingService.findAllByProviderId(providerId).size.toString()
+                    ),
+                    createStat(
+                        getTranslation("booking.status.pending"),
                         bookingService.findAllByProviderIdAndStatus(providerId, BookingStatus.PENDING).size.toString()
                     ),
                     createStat(
-                        "Completed Bookings",
+                        getTranslation("booking.status.completed"),
                         bookingService.findAllByProviderIdAndStatus(providerId, BookingStatus.COMPLETED).size.toString()
                     )
                 )
@@ -78,13 +86,16 @@ class DashboardView(
             else -> { // Regular user
                 val userId = currentUser?.id ?: 0
                 stats.add(
-                    createStat("Total Bookings", bookingService.findAllByUserId(userId).size.toString()),
                     createStat(
-                        "Pending Bookings",
+                        getTranslation("admin.stats.total.bookings"),
+                        bookingService.findAllByUserId(userId).size.toString()
+                    ),
+                    createStat(
+                        getTranslation("booking.status.pending"),
                         bookingService.findAllByUserIdAndStatus(userId, BookingStatus.PENDING).size.toString()
                     ),
                     createStat(
-                        "Confirmed Bookings",
+                        getTranslation("booking.status.confirmed"),
                         bookingService.findAllByUserIdAndStatus(userId, BookingStatus.CONFIRMED).size.toString()
                     )
                 )
@@ -124,7 +135,7 @@ class DashboardView(
         layout.style.set("box-shadow", "var(--lumo-box-shadow-xs)")
         layout.width = "100%"
 
-        layout.add(H3("Bookings by Status"))
+        layout.add(H3(getTranslation("admin.bookings.by.status")))
 
         // Count bookings by status
         val userId = SecurityUtils.getCurrentUsername()?.let {
@@ -140,18 +151,46 @@ class DashboardView(
 
         if (totalBookings > 0) {
             // Pending bookings
-            layout.add(createStatusBar("Pending", pendingCount, totalBookings, "var(--lumo-primary-color)"))
+            layout.add(
+                createStatusBar(
+                    getTranslation("booking.status.pending"),
+                    pendingCount,
+                    totalBookings,
+                    "var(--lumo-primary-color)"
+                )
+            )
 
             // Confirmed bookings
-            layout.add(createStatusBar("Confirmed", confirmedCount, totalBookings, "var(--lumo-success-color)"))
+            layout.add(
+                createStatusBar(
+                    getTranslation("booking.status.confirmed"),
+                    confirmedCount,
+                    totalBookings,
+                    "var(--lumo-success-color)"
+                )
+            )
 
             // Cancelled bookings
-            layout.add(createStatusBar("Cancelled", cancelledCount, totalBookings, "var(--lumo-error-color)"))
+            layout.add(
+                createStatusBar(
+                    getTranslation("booking.status.cancelled"),
+                    cancelledCount,
+                    totalBookings,
+                    "var(--lumo-error-color)"
+                )
+            )
 
             // Completed bookings
-            layout.add(createStatusBar("Completed", completedCount, totalBookings, "var(--lumo-success-text-color)"))
+            layout.add(
+                createStatusBar(
+                    getTranslation("booking.status.completed"),
+                    completedCount,
+                    totalBookings,
+                    "var(--lumo-success-text-color)"
+                )
+            )
         } else {
-            layout.add(Span("No bookings yet."))
+            layout.add(Span(getTranslation("admin.no.bookings")))
         }
 
         return layout
@@ -192,25 +231,25 @@ class DashboardView(
         layout.setPadding(false)
         layout.setSpacing(true)
 
-        layout.add(H3("Upcoming Bookings"))
+        layout.add(H3(getTranslation("dashboard.upcoming.bookings")))
 
         val grid = Grid<Booking>()
         grid.setItems(bookingService.findUpcomingBookings())
 
         grid.addColumn { booking -> booking.service.name }
-            .setHeader("Service")
+            .setHeader(getTranslation("booking.service"))
 
         grid.addColumn { booking -> booking.service.provider!!.fullName() }
-            .setHeader("Provider")
+            .setHeader(getTranslation("booking.provider"))
 
         grid.addColumn { booking -> booking.startTime.format(formatter) }
-            .setHeader("Start Time")
+            .setHeader(getTranslation("booking.start.time"))
 
         grid.addColumn { booking -> booking.endTime.format(formatter) }
-            .setHeader("End Time")
+            .setHeader(getTranslation("booking.end.time"))
 
         grid.addColumn { booking -> booking.status.name }
-            .setHeader("Status")
+            .setHeader(getTranslation("booking.status"))
 
         grid.setWidthFull()
 
@@ -240,5 +279,9 @@ class DashboardView(
             UserRole.USER -> "" // DashboardView (main view)
             else -> "" // Default to main dashboard if role not determined
         }
+    }
+
+    override fun getPageTitle(): String {
+        return "micro-booking :: ${getTranslation("dashboard.title")}"
     }
 }
