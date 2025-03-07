@@ -11,7 +11,7 @@ import com.vaadin.flow.component.textfield.PasswordField
 import com.vaadin.flow.component.textfield.TextField
 import com.vaadin.flow.data.binder.BeanValidationBinder
 import com.vaadin.flow.data.validator.EmailValidator
-import com.vaadin.flow.router.PageTitle
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import jakarta.annotation.security.PermitAll
 import online.kimino.micro.booking.entity.User
@@ -21,21 +21,20 @@ import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.MainLayout
 
 @Route(value = "profile", layout = MainLayout::class)
-@PageTitle("My Profile | Booking SaaS")
 @PermitAll
 class ProfileView(
     private val userService: UserService
-) : VerticalLayout() {
+) : VerticalLayout(), HasDynamicTitle {
 
-    private val firstName = TextField("First Name")
-    private val lastName = TextField("Last Name")
-    private val email = EmailField("Email")
-    private val phoneNumber = TextField("Phone Number")
-    private val companyName = TextField("Company Name")
+    private val firstName = TextField(getTranslation("auth.first.name"))
+    private val lastName = TextField(getTranslation("auth.last.name"))
+    private val email = EmailField(getTranslation("auth.email"))
+    private val phoneNumber = TextField(getTranslation("auth.phone"))
+    private val companyName = TextField(getTranslation("profile.personal.info"))
 
-    private val currentPassword = PasswordField("Current Password")
-    private val newPassword = PasswordField("New Password")
-    private val confirmPassword = PasswordField("Confirm New Password")
+    private val currentPassword = PasswordField(getTranslation("auth.current.password"))
+    private val newPassword = PasswordField(getTranslation("auth.new.password"))
+    private val confirmPassword = PasswordField(getTranslation("auth.confirm.password"))
 
     private val userBinder = BeanValidationBinder(User::class.java)
     private var currentUser: User? = null
@@ -47,7 +46,7 @@ class ProfileView(
         configureFields()
 
         add(
-            H2("My Profile"),
+            H2(getTranslation("profile.title")),
             createProfileForm(),
             createPasswordForm()
         )
@@ -69,16 +68,16 @@ class ProfileView(
 
     private fun configureUserBinder() {
         userBinder.forField(firstName)
-            .asRequired("First name is required")
+            .asRequired(getTranslation("validation.required"))
             .bind("firstName")
 
         userBinder.forField(lastName)
-            .asRequired("Last name is required")
+            .asRequired(getTranslation("validation.required"))
             .bind("lastName")
 
         userBinder.forField(email)
-            .asRequired("Email is required")
-            .withValidator(EmailValidator("Please enter a valid email address"))
+            .asRequired(getTranslation("validation.required"))
+            .withValidator(EmailValidator(getTranslation("validation.email")))
             .bind("email")
 
         userBinder.forField(phoneNumber)
@@ -96,7 +95,7 @@ class ProfileView(
         form.isSpacing = true
 
         form.add(
-            H2("Personal Information"),
+            H2(getTranslation("profile.personal.info")),
             firstName,
             lastName,
             email,
@@ -105,12 +104,12 @@ class ProfileView(
 
         // Only add company name field for providers
         if (SecurityUtils.hasRole(UserRole.PROVIDER)) {
-            companyName.placeholder = "Your business or company name"
+            companyName.placeholder = getTranslation("auth.create.account")
             form.add(companyName)
         }
 
         form.add(
-            Button("Save Profile") { saveProfile() }
+            Button(getTranslation("common.save")) { saveProfile() }
                 .apply { addThemeVariants(ButtonVariant.LUMO_PRIMARY) }
         )
 
@@ -129,11 +128,11 @@ class ProfileView(
         confirmPassword.isRequired = true
 
         form.add(
-            H2("Change Password"),
+            H2(getTranslation("profile.change.password")),
             currentPassword,
             newPassword,
             confirmPassword,
-            Button("Change Password") { changePassword() }
+            Button(getTranslation("profile.change.password")) { changePassword() }
                 .apply { addThemeVariants(ButtonVariant.LUMO_PRIMARY) }
         )
 
@@ -143,7 +142,7 @@ class ProfileView(
     private fun loadUserData() {
         val username = SecurityUtils.getCurrentUsername()
         if (username == null) {
-            Notification.show("Error: Not logged in").apply {
+            Notification.show(getTranslation("user.not.logged.in")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -156,13 +155,13 @@ class ProfileView(
                 currentUser = user.get()
                 userBinder.readBean(currentUser)
             } else {
-                Notification.show("Error: User not found").apply {
+                Notification.show(getTranslation("user.not.found")).apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_ERROR)
                 }
             }
         } catch (e: Exception) {
-            Notification.show("Error loading user data: ${e.message}").apply {
+            Notification.show(getTranslation("notification.error", e.message)).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -171,7 +170,7 @@ class ProfileView(
 
     private fun saveProfile() {
         if (currentUser == null) {
-            Notification.show("Error: User not found").apply {
+            Notification.show(getTranslation("user.not.found")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -183,12 +182,12 @@ class ProfileView(
                 userBinder.writeBean(currentUser)
                 userService.updateUser(currentUser!!)
 
-                Notification.show("Profile updated successfully").apply {
+                Notification.show(getTranslation("notification.updated")).apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_SUCCESS)
                 }
             } catch (e: Exception) {
-                Notification.show("Error updating profile: ${e.message}").apply {
+                Notification.show(getTranslation("notification.failed") + ": ${e.message}").apply {
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_ERROR)
                 }
@@ -198,7 +197,7 @@ class ProfileView(
 
     private fun changePassword() {
         if (currentUser == null) {
-            Notification.show("Error: User not found").apply {
+            Notification.show(getTranslation("user.not.found")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -207,7 +206,7 @@ class ProfileView(
 
         // Validate password fields
         if (currentPassword.value.isEmpty() || newPassword.value.isEmpty() || confirmPassword.value.isEmpty()) {
-            Notification.show("All password fields are required").apply {
+            Notification.show(getTranslation("validation.required")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -215,7 +214,7 @@ class ProfileView(
         }
 
         if (newPassword.value != confirmPassword.value) {
-            Notification.show("New passwords do not match").apply {
+            Notification.show(getTranslation("validation.passwords.match")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -223,7 +222,7 @@ class ProfileView(
         }
 
         if (newPassword.value.length < 8) {
-            Notification.show("New password must be at least 8 characters long").apply {
+            Notification.show(getTranslation("validation.password.length")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -240,15 +239,17 @@ class ProfileView(
             newPassword.clear()
             confirmPassword.clear()
 
-            Notification.show("Password changed successfully").apply {
+            Notification.show(getTranslation("notification.updated")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
         } catch (e: Exception) {
-            Notification.show("Error changing password: ${e.message}").apply {
+            Notification.show(getTranslation("notification.failed") + ": ${e.message}").apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
         }
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("profile.title")}"
 }
