@@ -10,7 +10,7 @@ import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.TextArea
-import com.vaadin.flow.router.PageTitle
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import jakarta.annotation.security.PermitAll
 import online.kimino.micro.booking.entity.Service
@@ -27,20 +27,19 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 @Route(value = "book", layout = MainLayout::class)
-@PageTitle("Book a Service | Booking SaaS")
 @PermitAll
 class CreateBookingView(
     private val serviceService: ServiceService,
     private val availabilityService: AvailabilityService,
     private val bookingService: BookingService,
     private val userService: UserService
-) : VerticalLayout() {
+) : VerticalLayout(), HasDynamicTitle {
 
-    private val providerSelector = ComboBox<User>("Select a Provider")
-    private val serviceSelector = ComboBox<Service>("Select a Service")
-    private val datePicker = DatePicker("Select a Date")
-    private val timeSelector = ComboBox<LocalTime>("Select a Time")
-    private val notesField = TextArea("Notes")
+    private val providerSelector = ComboBox<User>(getTranslation("booking.select.provider"))
+    private val serviceSelector = ComboBox<Service>(getTranslation("booking.select.service"))
+    private val datePicker = DatePicker(getTranslation("booking.select.date"))
+    private val timeSelector = ComboBox<LocalTime>(getTranslation("booking.select.time"))
+    private val notesField = TextArea(getTranslation("notes.plural"))
 
     private val providerSelectionLayout = VerticalLayout()
     private val serviceSelectionLayout = VerticalLayout()
@@ -70,7 +69,7 @@ class CreateBookingView(
         bookingDetailsLayout.isVisible = false
 
         add(
-            H2("Book a Service"),
+            H2(getTranslation("booking.create")),
             providerSelectionLayout,
             serviceSelectionLayout,
             serviceInfoLayout,
@@ -92,7 +91,7 @@ class CreateBookingView(
         }
 
         providerSelector.width = "100%"
-        providerSelector.placeholder = "First select a service provider"
+        providerSelector.placeholder = getTranslation("booking.provider.placeholder")
 
         providerSelector.addValueChangeListener { event ->
             selectedProvider = event.value
@@ -112,14 +111,14 @@ class CreateBookingView(
         }
 
         providerSelectionLayout.add(
-            H3("Select a Provider"),
+            H3(getTranslation("booking.select.provider")),
             providerSelector
         )
     }
 
     private fun setupServiceSelector() {
         serviceSelector.width = "100%"
-        serviceSelector.placeholder = "Select a service offered by this provider"
+        serviceSelector.placeholder = getTranslation("booking.service.placeholder")
 
         serviceSelector.addValueChangeListener { event ->
             selectedService = event.value
@@ -140,7 +139,7 @@ class CreateBookingView(
         }
 
         serviceSelectionLayout.add(
-            H3("Select a Service"),
+            H3(getTranslation("booking.select.service")),
             serviceSelector
         )
     }
@@ -168,7 +167,7 @@ class CreateBookingView(
         }
 
         timeSelectionLayout.add(
-            H3("Select Date and Time"),
+            H3(getTranslation("booking.select.datetime")),
             datePicker,
             timeSelector
         )
@@ -192,14 +191,14 @@ class CreateBookingView(
     private fun setupNotesField() {
         notesField.width = "100%"
         notesField.maxLength = 500
-        notesField.placeholder = "Additional information for the service provider"
+        notesField.placeholder = getTranslation("booking.notes.placeholder")
     }
 
     private fun setupAvailableDates(serviceId: Long) {
         val availableDates = availabilityService.getAvailableDates(serviceId)
 
         if (availableDates.isEmpty()) {
-            Notification.show("No available dates found for this service")
+            Notification.show(getTranslation("booking.no.available.dates"))
             datePicker.isEnabled = false
             return
         }
@@ -210,7 +209,7 @@ class CreateBookingView(
 
         datePicker.addValueChangeListener { event ->
             if (event.value != null && !availableDates.contains(event.value)) {
-                Notification.show("The selected date is not available")
+                Notification.show(getTranslation("booking.date.not.available"))
                 datePicker.value = null
             }
         }
@@ -222,7 +221,7 @@ class CreateBookingView(
         availableTimes = availabilityService.getAvailableTimeSlots(serviceId, date)
 
         if (availableTimes.isEmpty()) {
-            Notification.show("No available time slots found for the selected date")
+            Notification.show(getTranslation("booking.no.available.slots"))
             timeSelector.isEnabled = false
             return
         }
@@ -236,9 +235,9 @@ class CreateBookingView(
     private fun showServiceInfo(service: Service) {
         serviceInfoLayout.removeAll()
 
-        val priceText = Paragraph("Price: $${service.price}")
-        val durationText = Paragraph("Duration: ${service.duration} minutes")
-        val descriptionText = Paragraph(service.description ?: "No description available")
+        val priceText = Paragraph("${getTranslation("service.price")}: $${service.price}")
+        val durationText = Paragraph("${getTranslation("service.duration")}: ${service.duration} ${getTranslation("common.minutes", arrayOf(service.duration))}")
+        val descriptionText = Paragraph(service.description ?: getTranslation("service.no.description"))
 
         serviceInfoLayout.add(
             H3(service.name),
@@ -256,18 +255,18 @@ class CreateBookingView(
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
-        val summaryText = Paragraph("You are about to book: ${service.name}")
+        val summaryText = Paragraph("${getTranslation("booking.summary.about.to.book")}: ${service.name}")
         val dateTimeText =
-            Paragraph("Date/Time: ${selectedDateTime.format(formatter)} to ${endDateTime.format(formatter)}")
-        val providerText = Paragraph("Provider: ${service.provider!!.fullName()}")
-        val priceText = Paragraph("Price: $${service.price}")
+            Paragraph(getTranslation("booking.datetime", selectedDateTime.format(formatter), endDateTime.format(formatter)))
+        val providerText = Paragraph("${getTranslation("booking.provider")}: ${service.provider!!.fullName()}")
+        val priceText = Paragraph("${getTranslation("service.price")}: $${service.price}")
 
-        val confirmButton = Button("Confirm Booking") {
+        val confirmButton = Button(getTranslation("booking.confirm")) {
             createBooking(service.id, selectedDateTime)
         }
 
         bookingDetailsLayout.add(
-            H3("Booking Summary"),
+            H3(getTranslation("booking.summary")),
             summaryText,
             dateTimeText,
             providerText,
@@ -280,8 +279,8 @@ class CreateBookingView(
     private fun createBooking(serviceId: Long, startTime: LocalDateTime) {
         try {
             val currentUser = SecurityUtils.getCurrentUsername()?.let {
-                userService.findByEmail(it).orElseThrow { NoSuchElementException("User not found") }
-            } ?: throw IllegalStateException("User not logged in")
+                userService.findByEmail(it).orElseThrow { NoSuchElementException(getTranslation("user.not.found")) }
+            } ?: throw IllegalStateException(getTranslation("user.not.logged.in"))
 
             val booking = bookingService.createBooking(serviceId, currentUser.id, startTime)
 
@@ -289,7 +288,7 @@ class CreateBookingView(
                 bookingService.updateBookingNotes(booking.id, notesField.value)
             }
 
-            Notification.show("Booking created successfully!").apply {
+            Notification.show(getTranslation("booking.created.success")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
@@ -298,10 +297,12 @@ class CreateBookingView(
             ui.ifPresent { ui -> ui.navigate(BookingListView::class.java) }
 
         } catch (e: Exception) {
-            Notification.show("Failed to create booking: ${e.message}").apply {
+            Notification.show("${getTranslation("booking.created.fail")}: ${e.message}").apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
         }
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("booking.create")}"
 }
