@@ -8,7 +8,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.progressbar.ProgressBar
-import com.vaadin.flow.router.PageTitle
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLink
 import jakarta.annotation.security.RolesAllowed
@@ -20,13 +20,12 @@ import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.MainLayout
 
 @Route(value = "admin", layout = MainLayout::class)
-@PageTitle("Admin Dashboard | Booking SaaS")
 @RolesAllowed("ADMIN")
 class AdminDashboardView(
     private val userService: UserService,
     private val serviceService: ServiceService,
     private val bookingService: BookingService
-) : VerticalLayout() {
+) : VerticalLayout(), HasDynamicTitle {
 
     init {
         addClassName("admin-dashboard-view")
@@ -45,15 +44,15 @@ class AdminDashboardView(
         header.setPadding(false)
         header.setSpacing(true)
 
-        header.add(H2("Admin Dashboard"))
+        header.add(H2(getTranslation("admin.dashboard")))
 
         val navLayout = HorizontalLayout()
         navLayout.setWidthFull()
         navLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.START)
         navLayout.add(
-            RouterLink("Users", AdminUsersView::class.java),
-            RouterLink("Services", AdminServicesView::class.java),
-            RouterLink("Bookings", AdminBookingsView::class.java)
+            RouterLink(getTranslation("admin.users"), AdminUsersView::class.java),
+            RouterLink(getTranslation("admin.services"), AdminServicesView::class.java),
+            RouterLink(getTranslation("admin.bookings"), AdminBookingsView::class.java)
         )
 
         header.add(navLayout)
@@ -77,10 +76,10 @@ class AdminDashboardView(
             .size
 
         stats.add(
-            createStat("Total Users", totalUsers.toString()),
-            createStat("Service Providers", totalProviders.toString()),
-            createStat("Total Services", totalServices.toString()),
-            createStat("Total Bookings", totalBookings.toString())
+            createStat(getTranslation("admin.stats.total.users"), totalUsers.toString()),
+            createStat(getTranslation("admin.stats.service.providers"), totalProviders.toString()),
+            createStat(getTranslation("admin.stats.total.services"), totalServices.toString()),
+            createStat(getTranslation("admin.stats.total.bookings"), totalBookings.toString())
         )
 
         return stats
@@ -118,7 +117,7 @@ class AdminDashboardView(
         layout.height = "auto"
         layout.isMargin = true
 
-        layout.add(H3("Bookings by Status"))
+        layout.add(H3(getTranslation("admin.bookings.by.status")))
 
         // Count bookings by status
         val allBookings = userService.getAllUsers()
@@ -134,18 +133,18 @@ class AdminDashboardView(
 
         if (totalBookings > 0) {
             // Pending bookings
-            layout.add(createStatusBar("Pending", pendingCount, totalBookings, "var(--lumo-primary-color)"))
+            layout.add(createStatusBar(getTranslation("booking.status.pending"), pendingCount, totalBookings, "var(--lumo-primary-color)"))
 
             // Confirmed bookings
-            layout.add(createStatusBar("Confirmed", confirmedCount, totalBookings, "var(--lumo-success-color)"))
+            layout.add(createStatusBar(getTranslation("booking.status.confirmed"), confirmedCount, totalBookings, "var(--lumo-success-color)"))
 
             // Cancelled bookings
-            layout.add(createStatusBar("Cancelled", cancelledCount, totalBookings, "var(--lumo-error-color)"))
+            layout.add(createStatusBar(getTranslation("booking.status.cancelled"), cancelledCount, totalBookings, "var(--lumo-error-color)"))
 
             // Completed bookings
-            layout.add(createStatusBar("Completed", completedCount, totalBookings, "var(--lumo-success-text-color)"))
+            layout.add(createStatusBar(getTranslation("booking.status.completed"), completedCount, totalBookings, "var(--lumo-success-text-color)"))
         } else {
-            layout.add(Span("No bookings yet."))
+            layout.add(Span(getTranslation("admin.no.bookings")))
         }
 
         return layout
@@ -162,7 +161,7 @@ class AdminDashboardView(
         layout.height = "auto"
         layout.isMargin = true
 
-        layout.add(H3("User Roles Distribution"))
+        layout.add(H3(getTranslation("admin.user.roles.distribution")))
 
         val allUsers = userService.getAllUsers()
         val adminCount = allUsers.count { it.role == UserRole.ADMIN }
@@ -173,19 +172,19 @@ class AdminDashboardView(
 
         if (totalUsers > 0) {
             // Admin users
-            layout.add(createStatusBar("Admins", adminCount, totalUsers, "#7986CB")) // Indigo color
+            layout.add(createStatusBar(getTranslation("admin.role.admins"), adminCount, totalUsers, "#7986CB")) // Indigo color
 
             // Provider users
-            layout.add(createStatusBar("Providers", providerCount, totalUsers, "#4CAF50")) // Green color
+            layout.add(createStatusBar(getTranslation("admin.role.providers"), providerCount, totalUsers, "#4CAF50")) // Green color
 
             // Regular users
-            layout.add(createStatusBar("Regular Users", regularUserCount, totalUsers, "#2196F3")) // Blue color
+            layout.add(createStatusBar(getTranslation("admin.role.users"), regularUserCount, totalUsers, "#2196F3")) // Blue color
 
             // Add a table with detailed numbers
             val statsLayout = createRoleStatsTable(adminCount, providerCount, regularUserCount, totalUsers)
             layout.add(statsLayout)
         } else {
-            layout.add(Span("No users yet."))
+            layout.add(Span(getTranslation("admin.no.users")))
         }
 
         return layout
@@ -194,22 +193,22 @@ class AdminDashboardView(
     private fun createRoleStatsTable(adminCount: Int, providerCount: Int, userCount: Int, total: Int): Component {
         val grid = com.vaadin.flow.component.grid.Grid<RoleStatRow>()
         grid.setItems(
-            RoleStatRow("Admins", adminCount, calculatePercentage(adminCount, total)),
-            RoleStatRow("Providers", providerCount, calculatePercentage(providerCount, total)),
-            RoleStatRow("Regular Users", userCount, calculatePercentage(userCount, total)),
-            RoleStatRow("Total", total, 100.0)
+            RoleStatRow(getTranslation("admin.role.admins"), adminCount, calculatePercentage(adminCount, total)),
+            RoleStatRow(getTranslation("admin.role.providers"), providerCount, calculatePercentage(providerCount, total)),
+            RoleStatRow(getTranslation("admin.role.users"), userCount, calculatePercentage(userCount, total)),
+            RoleStatRow(getTranslation("admin.total"), total, 100.0)
         )
 
         grid.addColumn { it.role }
-            .setHeader("Role")
+            .setHeader(getTranslation("admin.column.role"))
             .setAutoWidth(true)
 
         grid.addColumn { it.count }
-            .setHeader("Count")
+            .setHeader(getTranslation("admin.column.count"))
             .setAutoWidth(true)
 
         grid.addColumn { "%.1f%%".format(it.percentage) }
-            .setHeader("Percentage")
+            .setHeader(getTranslation("admin.column.percentage"))
             .setAutoWidth(true)
 
         return grid
@@ -251,4 +250,6 @@ class AdminDashboardView(
 
     // Data class for role statistics
     data class RoleStatRow(val role: String, val count: Int, val percentage: Double)
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("admin.dashboard")}"
 }
