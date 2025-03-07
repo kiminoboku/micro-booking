@@ -1,5 +1,6 @@
 package online.kimino.micro.booking.ui.component
 
+import com.vaadin.flow.component.UI
 import com.vaadin.flow.component.combobox.ComboBox
 import com.vaadin.flow.component.icon.Icon
 import com.vaadin.flow.component.icon.VaadinIcon
@@ -39,9 +40,10 @@ class LanguageSelector : HorizontalLayout() {
 
         languageSelect.addValueChangeListener { event ->
             if (event.value != null) {
+                UI.getCurrent().locale = event.value
                 VaadinSession.getCurrent().locale = event.value
                 // Refresh the page to apply the new locale
-                com.vaadin.flow.component.UI.getCurrent().page.reload()
+                UI.getCurrent().page.reload()
             }
         }
 

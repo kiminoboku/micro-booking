@@ -11,12 +11,11 @@ import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.component.LanguageSelector
 
 @Route("verify")
-@PageTitle("Verify Email | Booking SaaS")
 @AnonymousAllowed
 class EmailVerificationView(
     private val userService: UserService,
     languageSelector: LanguageSelector
-) : BaseAuthView(languageSelector), HasUrlParameter<String> {
+) : BaseAuthView(languageSelector), HasUrlParameter<String>, HasDynamicTitle {
 
     private val statusText = Paragraph()
     private val loginLink = RouterLink(getTranslation("auth.go.to.login"), LoginView::class.java)
@@ -39,7 +38,7 @@ class EmailVerificationView(
 
     override fun setParameter(event: BeforeEvent, token: String?) {
         if (token.isNullOrBlank()) {
-            showError("Invalid verification link. The token is missing.")
+            showError(getTranslation("verification.token.missing"))
             return
         }
 
@@ -47,12 +46,12 @@ class EmailVerificationView(
             val success = userService.verifyUser(token)
 
             if (success) {
-                showSuccess("Your email has been successfully verified. You can now log in to your account.")
+                showSuccess(getTranslation("verification.success"))
             } else {
-                showError("Invalid or expired verification link. Please request a new verification email.")
+                showError(getTranslation("verification.invalid"))
             }
         } catch (e: Exception) {
-            showError("Failed to verify email: ${e.message}")
+            showError(getTranslation("verification.failed", arrayOf(e.message)))
         }
     }
 
@@ -77,4 +76,6 @@ class EmailVerificationView(
             addThemeVariants(NotificationVariant.LUMO_SUCCESS)
         }
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("auth.email.verification")}"
 }
