@@ -21,17 +21,17 @@ import online.kimino.micro.booking.entity.UserRole
 
 class UserForm(user: User?) : FormLayout() {
 
-    private val firstName = TextField("First Name")
-    private val lastName = TextField("Last Name")
-    private val email = EmailField("Email")
-    private val phoneNumber = TextField("Phone Number")
-    private val companyName = TextField("Company Name")
-    private val role = ComboBox<UserRole>("Role")
-    private val enabled = Checkbox("Enabled")
-    private val password = PasswordField("Password")
+    private val firstName = TextField(getTranslation("auth.first.name"))
+    private val lastName = TextField(getTranslation("auth.last.name"))
+    private val email = EmailField(getTranslation("auth.email"))
+    private val phoneNumber = TextField(getTranslation("auth.phone"))
+    private val companyName = TextField(getTranslation("profile.personal.info"))
+    private val role = ComboBox<UserRole>(getTranslation("admin.column.role"))
+    private val enabled = Checkbox(getTranslation("service.active"))
+    private val password = PasswordField(getTranslation("auth.password"))
 
-    private val save = Button("Save")
-    private val cancel = Button("Cancel")
+    private val save = Button(getTranslation("common.save"))
+    private val cancel = Button(getTranslation("common.cancel"))
 
     private val binder = BeanValidationBinder(User::class.java)
     private var currentUser = user ?: User(
@@ -81,7 +81,7 @@ class UserForm(user: User?) : FormLayout() {
         role.setItems(UserRole.entries.toList())
         role.isRequired = true
 
-        companyName.placeholder = "Enter business name (for providers only)"
+        companyName.placeholder = getTranslation("auth.create.account")
 
         // Make password required for new users
         if (currentUser.id == 0L) {
@@ -93,16 +93,16 @@ class UserForm(user: User?) : FormLayout() {
 
     private fun configureBinder() {
         binder.forField(firstName)
-            .asRequired("First name is required")
+            .asRequired(getTranslation("validation.required"))
             .bind("firstName")
 
         binder.forField(lastName)
-            .asRequired("Last name is required")
+            .asRequired(getTranslation("validation.required"))
             .bind("lastName")
 
         binder.forField(email)
-            .asRequired("Email is required")
-            .withValidator(EmailValidator("Please enter a valid email address"))
+            .asRequired(getTranslation("validation.required"))
+            .withValidator(EmailValidator(getTranslation("validation.email")))
             .bind("email")
 
         binder.forField(phoneNumber)
@@ -112,7 +112,7 @@ class UserForm(user: User?) : FormLayout() {
             .bind("companyName")
 
         binder.forField(role)
-            .asRequired("Role is required")
+            .asRequired(getTranslation("validation.required"))
             .bind("role")
 
         binder.forField(enabled)
@@ -121,8 +121,8 @@ class UserForm(user: User?) : FormLayout() {
         // Only bind password for new users
         if (currentUser.id == 0L) {
             binder.forField(password)
-                .asRequired("Password is required")
-                .withValidator({ it.length >= 8 }, "Password must be at least 8 characters long")
+                .asRequired(getTranslation("validation.required"))
+                .withValidator({ it.length >= 8 }, getTranslation("validation.password.length"))
                 .bind("password")
         }
     }

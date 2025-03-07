@@ -14,7 +14,7 @@ import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
-import com.vaadin.flow.router.PageTitle
+import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLink
 import jakarta.annotation.security.RolesAllowed
@@ -23,11 +23,10 @@ import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.MainLayout
 
 @Route(value = "admin/users", layout = MainLayout::class)
-@PageTitle("User Management | Booking SaaS")
 @RolesAllowed("ADMIN")
 class AdminUsersView(
     private val userService: UserService
-) : VerticalLayout() {
+) : VerticalLayout(), HasDynamicTitle {
 
     private val grid = Grid<User>()
 
@@ -49,15 +48,15 @@ class AdminUsersView(
         header.setPadding(false)
         header.setSpacing(true)
 
-        header.add(H2("User Management"))
+        header.add(H2(getTranslation("admin.users")))
 
         val navLayout = HorizontalLayout()
         navLayout.setWidthFull()
         navLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.START)
         navLayout.add(
-            RouterLink("Dashboard", AdminDashboardView::class.java),
-            RouterLink("Services", AdminServicesView::class.java),
-            RouterLink("Bookings", AdminBookingsView::class.java)
+            RouterLink(getTranslation("dashboard.title"), AdminDashboardView::class.java),
+            RouterLink(getTranslation("service.title.plural"), AdminServicesView::class.java),
+            RouterLink(getTranslation("admin.bookings"), AdminBookingsView::class.java)
         )
 
         header.add(navLayout)
@@ -69,45 +68,45 @@ class AdminUsersView(
         grid.setSizeFull()
 
         grid.addColumn { user -> user.firstName }
-            .setHeader("First Name")
+            .setHeader(getTranslation("auth.first.name"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { user -> user.lastName }
-            .setHeader("Last Name")
+            .setHeader(getTranslation("auth.last.name"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { user -> user.email }
-            .setHeader("Email")
+            .setHeader(getTranslation("auth.email"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addColumn { user -> user.phoneNumber ?: "-" }
-            .setHeader("Phone")
+            .setHeader(getTranslation("auth.phone"))
             .setAutoWidth(true)
 
         grid.addColumn { user -> user.role.name }
-            .setHeader("Role")
+            .setHeader(getTranslation("admin.column.role"))
             .setSortable(true)
             .setAutoWidth(true)
 
         grid.addComponentColumn { user ->
             if (user.enabled) {
-                Span("Active").apply {
+                Span(getTranslation("service.active")).apply {
                     element.style.set("color", "var(--lumo-success-color)")
                 }
             } else {
-                Span("Inactive").apply {
+                Span(getTranslation("service.inactive")).apply {
                     element.style.set("color", "var(--lumo-error-color)")
                 }
             }
         }
-            .setHeader("Status")
+            .setHeader(getTranslation("booking.status"))
             .setAutoWidth(true)
 
         grid.addComponentColumn { user -> createUserActionButtons(user) }
-            .setHeader("Actions")
+            .setHeader(getTranslation("common.actions"))
             .setAutoWidth(true)
 
         grid.getColumns().forEach { it.setResizable(true) }
@@ -120,7 +119,7 @@ class AdminUsersView(
         buttonLayout.setWidthFull()
         buttonLayout.justifyContentMode = FlexComponent.JustifyContentMode.END
 
-        val addButton = Button("Add User", Icon(VaadinIcon.PLUS)) {
+        val addButton = Button(getTranslation("auth.register"), Icon(VaadinIcon.PLUS)) {
             showUserForm(null)
         }
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
@@ -139,21 +138,21 @@ class AdminUsersView(
             showUserForm(user)
         }
         editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY)
-        editButton.element.setAttribute("title", "Edit User")
+        editButton.element.setAttribute("title", getTranslation("common.edit"))
 
         // Toggle status button
         val toggleButton = if (user.enabled) {
             Button(Icon(VaadinIcon.BAN)) {
                 toggleUserStatus(user)
             }.apply {
-                element.setAttribute("title", "Disable User")
+                element.setAttribute("title", getTranslation("service.inactive"))
                 addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR)
             }
         } else {
             Button(Icon(VaadinIcon.CHECK)) {
                 toggleUserStatus(user)
             }.apply {
-                element.setAttribute("title", "Enable User")
+                element.setAttribute("title", getTranslation("service.active"))
                 addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SUCCESS)
             }
         }
@@ -164,7 +163,10 @@ class AdminUsersView(
 
     private fun showUserForm(user: User?) {
         val dialog = Dialog()
-        dialog.headerTitle = if (user == null) "Add New User" else "Edit User"
+        dialog.headerTitle = if (user == null)
+            getTranslation("auth.create.account")
+        else
+            getTranslation("common.edit") + " " + user.fullName()
 
         val userForm = UserForm(user)
 
@@ -191,14 +193,14 @@ class AdminUsersView(
                 userService.updateUser(user)
             }
 
-            Notification.show("User saved successfully").apply {
+            Notification.show(getTranslation("notification.saved")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
 
             updateUserList()
         } catch (e: Exception) {
-            Notification.show("Failed to save user: ${e.message}").apply {
+            Notification.show(getTranslation("notification.failed") + ": ${e.message}").apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -210,15 +212,14 @@ class AdminUsersView(
             user.enabled = !user.enabled
             userService.updateUser(user)
 
-            val statusText = if (user.enabled) "enabled" else "disabled"
-            Notification.show("User $statusText successfully").apply {
+            Notification.show(getTranslation("notification.updated")).apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_SUCCESS)
             }
 
             updateUserList()
         } catch (e: Exception) {
-            Notification.show("Failed to update user status: ${e.message}").apply {
+            Notification.show(getTranslation("notification.failed") + ": ${e.message}").apply {
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
@@ -228,4 +229,6 @@ class AdminUsersView(
     private fun updateUserList() {
         grid.setItems(userService.getAllUsers())
     }
+
+    override fun getPageTitle() = "micro-booking :: ${getTranslation("admin.users")}"
 }
