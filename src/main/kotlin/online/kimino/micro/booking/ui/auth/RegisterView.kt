@@ -15,6 +15,7 @@ import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.auth.AnonymousAllowed
+import io.github.oshai.kotlinlogging.KotlinLogging
 import online.kimino.micro.booking.entity.User
 import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.component.LanguageSelector
@@ -26,6 +27,7 @@ class RegisterView(
     languageSelector: LanguageSelector
 ) : BaseAuthView(languageSelector), HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger { }
     private val firstName = TextField(getTranslation("auth.first.name"))
     private val lastName = TextField(getTranslation("auth.last.name"))
     private val email = EmailField(getTranslation("auth.email"))
@@ -129,6 +131,7 @@ class RegisterView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when registering" })
         }
     }
 

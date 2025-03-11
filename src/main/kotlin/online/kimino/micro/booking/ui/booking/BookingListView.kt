@@ -18,6 +18,7 @@ import com.vaadin.flow.component.tabs.Tabs
 import com.vaadin.flow.component.textfield.TextArea
 import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.security.PermitAll
 import online.kimino.micro.booking.entity.Booking
 import online.kimino.micro.booking.entity.BookingStatus
@@ -35,6 +36,7 @@ class BookingListView(
     private val userService: UserService
 ) : VerticalLayout(), HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger {}
     private val grid = Grid<Booking>()
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
@@ -296,6 +298,7 @@ class BookingListView(
                         position = Notification.Position.MIDDLE
                         addThemeVariants(NotificationVariant.LUMO_ERROR)
                     }
+                    logger.warn(e, { "Error when updating booking notes" })
                 }
             }
 
@@ -336,6 +339,7 @@ class BookingListView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when completing boooking" })
         }
     }
 
@@ -356,6 +360,7 @@ class BookingListView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when completing booking" })
         }
     }
 
@@ -398,6 +403,7 @@ class BookingListView(
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_ERROR)
                 }
+                logger.warn(e, { "Error when cancelling booking" })
             }
         }
         confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR)

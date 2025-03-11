@@ -12,6 +12,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.component.textfield.TextArea
 import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.security.PermitAll
 import online.kimino.micro.booking.entity.Service
 import online.kimino.micro.booking.entity.User
@@ -35,6 +36,7 @@ class CreateBookingView(
     private val userService: UserService
 ) : VerticalLayout(), HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger {}
     private val providerSelector = ComboBox<User>(getTranslation("booking.select.provider"))
     private val serviceSelector = ComboBox<Service>(getTranslation("booking.select.service"))
     private val datePicker = DatePicker(getTranslation("booking.select.date"))
@@ -236,7 +238,8 @@ class CreateBookingView(
         serviceInfoLayout.removeAll()
 
         val priceText = Paragraph("${getTranslation("service.price")}: $${service.price}")
-        val durationText = Paragraph("${getTranslation("service.duration")}: ${getTranslation("common.minutes", service.duration)}")
+        val durationText =
+            Paragraph("${getTranslation("service.duration")}: ${getTranslation("common.minutes", service.duration)}")
         val descriptionText = Paragraph(service.description ?: getTranslation("service.no.description"))
 
         serviceInfoLayout.add(
@@ -257,7 +260,13 @@ class CreateBookingView(
 
         val summaryText = Paragraph("${getTranslation("booking.summary.about.to.book")}: ${service.name}")
         val dateTimeText =
-            Paragraph(getTranslation("booking.datetime", selectedDateTime.format(formatter), endDateTime.format(formatter)))
+            Paragraph(
+                getTranslation(
+                    "booking.datetime",
+                    selectedDateTime.format(formatter),
+                    endDateTime.format(formatter)
+                )
+            )
         val providerText = Paragraph("${getTranslation("booking.provider")}: ${service.provider!!.fullName()}")
         val priceText = Paragraph("${getTranslation("service.price")}: $${service.price}")
 
@@ -301,6 +310,7 @@ class CreateBookingView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when creating booking" })
         }
     }
 

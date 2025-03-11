@@ -16,6 +16,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLink
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.security.RolesAllowed
 import online.kimino.micro.booking.entity.Service
 import online.kimino.micro.booking.service.ServiceService
@@ -27,6 +28,7 @@ class AdminServicesView(
     private val serviceService: ServiceService
 ) : VerticalLayout(), HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger {}
     private val grid = Grid<Service>()
 
     init {
@@ -157,6 +159,7 @@ class AdminServicesView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when toggling service status" })
         }
     }
 
@@ -172,10 +175,19 @@ class AdminServicesView(
         // Create detail items
         val nameDetail = createDetailItem("${getTranslation("service.name")}:", service.name)
         val providerDetail = createDetailItem("${getTranslation("booking.provider")}:", service.provider!!.fullName())
-        val durationDetail = createDetailItem("${getTranslation("service.duration")}:", "${service.duration} ${getTranslation("common.minutes", service.duration)}")
+        val durationDetail = createDetailItem(
+            "${getTranslation("service.duration")}:",
+            "${service.duration} ${getTranslation("common.minutes", service.duration)}"
+        )
         val priceDetail = createDetailItem("${getTranslation("service.price")}:", "$${service.price}")
-        val statusDetail = createDetailItem("${getTranslation("booking.status")}:", if (service.active) getTranslation("service.active") else getTranslation("service.inactive"))
-        val descriptionDetail = createDetailItem("${getTranslation("service.description")}:", service.description ?: getTranslation("service.description"))
+        val statusDetail = createDetailItem(
+            "${getTranslation("booking.status")}:",
+            if (service.active) getTranslation("service.active") else getTranslation("service.inactive")
+        )
+        val descriptionDetail = createDetailItem(
+            "${getTranslation("service.description")}:",
+            service.description ?: getTranslation("service.description")
+        )
         val createdAtDetail = createDetailItem(
             "${getTranslation("common.created.at")}:",
             service.createdAt.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))

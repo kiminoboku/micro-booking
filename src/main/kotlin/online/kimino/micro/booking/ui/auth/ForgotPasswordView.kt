@@ -11,6 +11,7 @@ import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLink
 import com.vaadin.flow.server.auth.AnonymousAllowed
+import io.github.oshai.kotlinlogging.KotlinLogging
 import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.component.LanguageSelector
 
@@ -21,6 +22,7 @@ class ForgotPasswordView(
     languageSelector: LanguageSelector
 ) : BaseAuthView(languageSelector), HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger {}
     private val email = EmailField(getTranslation("auth.email"))
     private val submitButton = Button(getTranslation("auth.reset.password"))
     private val messageText = Paragraph()
@@ -85,6 +87,7 @@ class ForgotPasswordView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when resetting password" })
         }
     }
 

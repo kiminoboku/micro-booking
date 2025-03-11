@@ -17,6 +17,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLink
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.security.RolesAllowed
 import online.kimino.micro.booking.entity.User
 import online.kimino.micro.booking.service.UserService
@@ -28,6 +29,7 @@ class AdminUsersView(
     private val userService: UserService
 ) : VerticalLayout(), HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger {}
     private val grid = Grid<User>()
 
     init {
@@ -54,8 +56,8 @@ class AdminUsersView(
         navLayout.setWidthFull()
         navLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.START)
         navLayout.add(
-            RouterLink(getTranslation("dashboard.title"), AdminDashboardView::class.java),
-            RouterLink(getTranslation("service.title.plural"), AdminServicesView::class.java),
+            RouterLink(getTranslation("admin.dashboard"), AdminDashboardView::class.java),
+            RouterLink(getTranslation("admin.services"), AdminServicesView::class.java),
             RouterLink(getTranslation("admin.bookings"), AdminBookingsView::class.java)
         )
 
@@ -119,7 +121,7 @@ class AdminUsersView(
         buttonLayout.setWidthFull()
         buttonLayout.justifyContentMode = FlexComponent.JustifyContentMode.END
 
-        val addButton = Button(getTranslation("auth.register"), Icon(VaadinIcon.PLUS)) {
+        val addButton = Button(getTranslation("admin.add.user"), Icon(VaadinIcon.PLUS)) {
             showUserForm(null)
         }
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
@@ -204,6 +206,7 @@ class AdminUsersView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Exception when creating or updating user" })
         }
     }
 
@@ -223,6 +226,7 @@ class AdminUsersView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Exception when updating user" })
         }
     }
 

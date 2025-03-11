@@ -25,7 +25,7 @@ class UserForm(user: User?) : FormLayout() {
     private val lastName = TextField(getTranslation("auth.last.name"))
     private val email = EmailField(getTranslation("auth.email"))
     private val phoneNumber = TextField(getTranslation("auth.phone"))
-    private val companyName = TextField(getTranslation("profile.personal.info"))
+    private val companyName = TextField(getTranslation("profile.company.name"))
     private val role = ComboBox<UserRole>(getTranslation("admin.column.role"))
     private val enabled = Checkbox(getTranslation("service.active"))
     private val password = PasswordField(getTranslation("auth.password"))
@@ -81,7 +81,7 @@ class UserForm(user: User?) : FormLayout() {
         role.setItems(UserRole.entries.toList())
         role.isRequired = true
 
-        companyName.placeholder = getTranslation("auth.create.account")
+        companyName.placeholder = getTranslation("admin.provide.company.name")
 
         // Make password required for new users
         if (currentUser.id == 0L) {

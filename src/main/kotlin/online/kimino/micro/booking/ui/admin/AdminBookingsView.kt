@@ -18,6 +18,7 @@ import com.vaadin.flow.component.textfield.TextArea
 import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLink
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.security.RolesAllowed
 import online.kimino.micro.booking.entity.Booking
 import online.kimino.micro.booking.entity.BookingStatus
@@ -37,6 +38,7 @@ class AdminBookingsView(
 
     private val grid = Grid<Booking>()
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    private val logger = KotlinLogging.logger {}
 
     init {
         addClassName("admin-bookings-view")
@@ -311,6 +313,7 @@ class AdminBookingsView(
                         position = Notification.Position.MIDDLE
                         addThemeVariants(NotificationVariant.LUMO_ERROR)
                     }
+                    logger.warn(e, { "Error when saving booking notes" })
                 }
             }
             saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY)
@@ -366,6 +369,7 @@ class AdminBookingsView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when saving booking status" })
         }
     }
 

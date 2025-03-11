@@ -9,6 +9,7 @@ import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.component.textfield.PasswordField
 import com.vaadin.flow.router.*
 import com.vaadin.flow.server.auth.AnonymousAllowed
+import io.github.oshai.kotlinlogging.KotlinLogging
 import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.component.LanguageSelector
 
@@ -19,6 +20,7 @@ class PasswordResetView(
     languageSelector: LanguageSelector
 ) : BaseAuthView(languageSelector), HasUrlParameter<String>, HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger {}
     private val newPassword = PasswordField(getTranslation("auth.new.password"))
     private val confirmPassword = PasswordField(getTranslation("auth.confirm.password"))
     private val submitButton = Button(getTranslation("auth.reset.password"))
@@ -110,6 +112,7 @@ class PasswordResetView(
             }
         } catch (e: Exception) {
             showError("${getTranslation("notification.failed")}: ${e.message}")
+            logger.warn(e, { "Error when resetting password" })
         }
     }
 

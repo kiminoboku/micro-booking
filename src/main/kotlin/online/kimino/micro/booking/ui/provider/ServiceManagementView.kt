@@ -15,6 +15,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.security.RolesAllowed
 import online.kimino.micro.booking.entity.Service
 import online.kimino.micro.booking.entity.UserRole
@@ -31,6 +32,7 @@ class ServiceManagementView(
     private val userService: UserService
 ) : VerticalLayout(), HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger { }
     private val grid = Grid<Service>()
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
@@ -206,6 +208,7 @@ class ServiceManagementView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when trying to create service" })
         }
     }
 
@@ -224,6 +227,7 @@ class ServiceManagementView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when trying to toggle service" })
         }
     }
 

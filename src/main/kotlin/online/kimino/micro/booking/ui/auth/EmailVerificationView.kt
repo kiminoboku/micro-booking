@@ -7,6 +7,7 @@ import com.vaadin.flow.component.notification.Notification
 import com.vaadin.flow.component.notification.NotificationVariant
 import com.vaadin.flow.router.*
 import com.vaadin.flow.server.auth.AnonymousAllowed
+import io.github.oshai.kotlinlogging.KotlinLogging
 import online.kimino.micro.booking.service.UserService
 import online.kimino.micro.booking.ui.component.LanguageSelector
 
@@ -17,6 +18,7 @@ class EmailVerificationView(
     languageSelector: LanguageSelector
 ) : BaseAuthView(languageSelector), HasUrlParameter<String>, HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger {}
     private val statusText = Paragraph()
     private val loginLink = RouterLink(getTranslation("auth.go.to.login"), LoginView::class.java)
 
@@ -52,6 +54,7 @@ class EmailVerificationView(
             }
         } catch (e: Exception) {
             showError(getTranslation("verification.failed", e.message))
+            logger.warn(e, { "Error when verifying user" })
         }
     }
 

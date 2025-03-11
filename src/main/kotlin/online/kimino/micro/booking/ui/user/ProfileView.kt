@@ -30,7 +30,7 @@ class ProfileView(
     private val lastName = TextField(getTranslation("auth.last.name"))
     private val email = EmailField(getTranslation("auth.email"))
     private val phoneNumber = TextField(getTranslation("auth.phone"))
-    private val companyName = TextField(getTranslation("profile.personal.info"))
+    private val companyName = TextField(getTranslation("profile.company.name"))
 
     private val currentPassword = PasswordField(getTranslation("auth.current.password"))
     private val newPassword = PasswordField(getTranslation("auth.new.password"))
@@ -95,7 +95,7 @@ class ProfileView(
         form.isSpacing = true
 
         form.add(
-            H2(getTranslation("profile.personal.info")),
+            H2(getTranslation("profile.company.name")),
             firstName,
             lastName,
             email,

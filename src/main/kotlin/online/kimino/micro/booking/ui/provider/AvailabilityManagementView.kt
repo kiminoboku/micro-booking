@@ -18,6 +18,7 @@ import com.vaadin.flow.router.BeforeEvent
 import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.HasUrlParameter
 import com.vaadin.flow.router.Route
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.security.RolesAllowed
 import online.kimino.micro.booking.entity.Availability
 import online.kimino.micro.booking.entity.Service
@@ -35,6 +36,7 @@ class AvailabilityManagementView(
     private val serviceService: ServiceService
 ) : VerticalLayout(), HasUrlParameter<Long>, HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger { }
     private val grid = Grid<Availability>()
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -68,6 +70,7 @@ class AvailabilityManagementView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { e.message })
 
             ui.ifPresent { ui ->
                 ui.navigate(ServiceManagementView::class.java)
@@ -144,7 +147,8 @@ class AvailabilityManagementView(
             if (service.active) "var(--lumo-success-color)" else "var(--lumo-error-color)"
         )
 
-        val durationSpan = Span("${getTranslation("availability.duration")}: ${getTranslation("common.minutes", service.duration)}")
+        val durationSpan =
+            Span("${getTranslation("availability.duration")}: ${getTranslation("common.minutes", service.duration)}")
 
         infoLayout.add(nameHeading, statusSpan, durationSpan)
 
@@ -216,8 +220,8 @@ class AvailabilityManagementView(
         try {
             if (availability.id == 0L) {
                 // New availability
-                availability.service = currentService ?:
-                        throw IllegalStateException(getTranslation("availability.error.service.null"))
+                availability.service =
+                    currentService ?: throw IllegalStateException(getTranslation("availability.error.service.null"))
             }
 
             // Validate that end time is after start time
@@ -238,6 +242,7 @@ class AvailabilityManagementView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when saving availability" })
         }
     }
 
@@ -280,6 +285,7 @@ class AvailabilityManagementView(
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_ERROR)
                 }
+                logger.warn(e, { "Error when deleting availability" })
             }
         }
         confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR)

@@ -15,6 +15,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
 import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.security.RolesAllowed
 import online.kimino.micro.booking.entity.ExceptionPeriod
 import online.kimino.micro.booking.entity.UserRole
@@ -31,6 +32,7 @@ class ExceptionPeriodManagementView(
     private val userService: UserService
 ) : VerticalLayout(), HasDynamicTitle {
 
+    private val logger = KotlinLogging.logger { }
     private val grid = Grid<ExceptionPeriod>()
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
@@ -199,6 +201,7 @@ class ExceptionPeriodManagementView(
                 position = Notification.Position.MIDDLE
                 addThemeVariants(NotificationVariant.LUMO_ERROR)
             }
+            logger.warn(e, { "Error when creating exception period" })
         }
     }
 
@@ -241,6 +244,7 @@ class ExceptionPeriodManagementView(
                     position = Notification.Position.MIDDLE
                     addThemeVariants(NotificationVariant.LUMO_ERROR)
                 }
+                logger.warn(e, { "Error when deleting exception period" })
             }
         }
         confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR)
