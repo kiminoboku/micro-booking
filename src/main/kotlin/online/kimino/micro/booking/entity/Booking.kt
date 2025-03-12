@@ -38,7 +38,11 @@ data class Booking(
     var updatedAt: LocalDateTime = LocalDateTime.now(),
 
     @OneToMany(mappedBy = "booking", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var notifications: MutableList<Notification> = mutableListOf()
+    var notifications: MutableList<Notification> = mutableListOf(),
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cyclic_booking_id")
+    var cyclicBooking: CyclicBooking? = null
 ) {
     @PreUpdate
     fun onUpdate() {

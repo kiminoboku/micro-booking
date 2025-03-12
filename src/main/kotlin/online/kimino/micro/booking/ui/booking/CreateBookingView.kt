@@ -14,6 +14,8 @@ import com.vaadin.flow.router.HasDynamicTitle
 import com.vaadin.flow.router.Route
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.security.PermitAll
+import online.kimino.micro.booking.entity.CyclicBookingStatus
+import online.kimino.micro.booking.entity.RecurrencePattern
 import online.kimino.micro.booking.entity.Service
 import online.kimino.micro.booking.entity.User
 import online.kimino.micro.booking.security.SecurityUtils
@@ -223,7 +225,15 @@ class CreateBookingView(
         availableTimes = availabilityService.getAvailableTimeSlots(serviceId, date)
 
         if (availableTimes.isEmpty()) {
-            Notification.show(getTranslation("booking.no.available.slots"))
+            // Check if there's a cyclic booking on this day that might be conflicting
+            val isCyclicBookingDay = checkForCyclicBookingConflicts(serviceId, date)
+
+            if (isCyclicBookingDay) {
+                Notification.show(getTranslation("booking.no.available.slots.cyclic.conflict"))
+            } else {
+                Notification.show(getTranslation("booking.no.available.slots"))
+            }
+
             timeSelector.isEnabled = false
             return
         }
@@ -232,6 +242,46 @@ class CreateBookingView(
         timeSelector.setItems(times)
         timeSelector.setItemLabelGenerator { it.format(DateTimeFormatter.ofPattern("HH:mm")) }
         timeSelector.isEnabled = true
+    }
+
+    /**
+     * Check if there are any cyclic bookings that might be causing conflicts on this date
+     */
+    private fun checkForCyclicBookingConflicts(serviceId: Long, date: LocalDate): Boolean {
+        try {
+            // We can use a simplified check just to give better error messages
+            val dayOfWeek = date.dayOfWeek
+            val dayOfMonth = date.dayOfMonth
+
+            // Check if service has availabilities for this day
+            val hasAvailability = availabilityService.findAllByServiceId(serviceId)
+                .any { it.dayOfWeek == dayOfWeek }
+
+            // If no availabilities defined for this day, it's not a cyclic booking conflict
+            if (!hasAvailability) {
+                return false
+            }
+
+            // Simple check to see if there might be cyclic bookings on this date
+            val provider = selectedProvider ?: return false
+
+            return provider.services
+                .filter { it.id == serviceId }
+                .flatMap { it.bookings }
+                .filter { it.cyclicBooking != null && it.cyclicBooking!!.status == CyclicBookingStatus.CONFIRMED }
+                .any { booking ->
+                    val cb = booking.cyclicBooking!!
+
+                    // Check if this cyclic booking applies to this date
+                    when (cb.recurrencePattern) {
+                        RecurrencePattern.WEEKLY -> cb.dayOfWeek == dayOfWeek
+                        RecurrencePattern.MONTHLY -> cb.dayOfMonth == dayOfMonth
+                    }
+                }
+        } catch (e: Exception) {
+            logger.warn(e, { "Error checking for cyclic booking conflicts" })
+            return false // Default to regular message on error
+        }
     }
 
     private fun showServiceInfo(service: Service) {

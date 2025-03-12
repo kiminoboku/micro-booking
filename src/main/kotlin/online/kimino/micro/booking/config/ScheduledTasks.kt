@@ -2,8 +2,10 @@ package online.kimino.micro.booking.config
 
 import online.kimino.micro.booking.entity.BookingStatus
 import online.kimino.micro.booking.repository.BookingRepository
+import online.kimino.micro.booking.repository.CyclicBookingRepository
 import online.kimino.micro.booking.repository.NotificationRepository
 import online.kimino.micro.booking.repository.VerificationTokenRepository
+import online.kimino.micro.booking.service.CyclicBookingService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -14,7 +16,9 @@ import java.time.LocalDateTime
 class ScheduledTasks(
     private val bookingRepository: BookingRepository,
     private val notificationRepository: NotificationRepository,
-    private val verificationTokenRepository: VerificationTokenRepository
+    private val verificationTokenRepository: VerificationTokenRepository,
+    private val cyclicBookingRepository: CyclicBookingRepository,
+    private val cyclicBookingService: CyclicBookingService
 ) {
 
     private val logger = LoggerFactory.getLogger(ScheduledTasks::class.java)
@@ -27,7 +31,6 @@ class ScheduledTasks(
     fun cleanupExpiredTokens() {
         logger.info("Running scheduled task: cleanupExpiredTokens")
 
-        val now = LocalDateTime.now()
         val expiredTokens = verificationTokenRepository.findAll()
             .filter { it.isExpired() }
 
@@ -105,6 +108,38 @@ class ScheduledTasks(
                 bookingRepository.save(booking)
 
                 logger.debug("Auto-cancelled booking ID: ${booking.id}")
+            }
+        }
+    }
+
+    /**
+     * Generate new bookings for confirmed cyclic bookings
+     * Run once a week on Sunday at 1:00 AM
+     */
+    @Scheduled(cron = "0 0 1 ? * SUN")
+    @Transactional
+    fun generateNewCyclicBookings() {
+        logger.info("Running scheduled task: generateNewCyclicBookings")
+
+        // Find all confirmed cyclic bookings that are still active (end date is null or in the future)
+        val now = LocalDateTime.now()
+        val activeCyclicBookings = cyclicBookingRepository.findAll()
+            .filter {
+                it.status == online.kimino.micro.booking.entity.CyclicBookingStatus.CONFIRMED &&
+                        (it.endDate == null || !it.endDate!!.isBefore(now.toLocalDate()))
+            }
+
+        if (activeCyclicBookings.isNotEmpty()) {
+            logger.info("Generating new bookings for ${activeCyclicBookings.size} active cyclic bookings")
+
+            activeCyclicBookings.forEach { cyclicBooking ->
+                try {
+                    // Generate new bookings for the next period
+                    cyclicBookingService.generateBookings(cyclicBooking)
+                    logger.debug("Generated new bookings for cyclic booking ID: ${cyclicBooking.id}")
+                } catch (e: Exception) {
+                    logger.error("Error generating bookings for cyclic booking ID: ${cyclicBooking.id}", e)
+                }
             }
         }
     }

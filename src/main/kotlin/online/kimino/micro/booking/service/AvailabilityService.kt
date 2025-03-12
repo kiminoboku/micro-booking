@@ -2,19 +2,23 @@ package online.kimino.micro.booking.service
 
 import jakarta.transaction.Transactional
 import online.kimino.micro.booking.entity.Availability
+import online.kimino.micro.booking.entity.RecurrencePattern
 import online.kimino.micro.booking.repository.AvailabilityRepository
 import online.kimino.micro.booking.repository.BookingRepository
+import online.kimino.micro.booking.repository.CyclicBookingRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.*
 
 @Service
 class AvailabilityService(
     private val availabilityRepository: AvailabilityRepository,
     private val bookingRepository: BookingRepository,
-    private val exceptionPeriodService: ExceptionPeriodService
+    private val exceptionPeriodService: ExceptionPeriodService,
+    private val cyclicBookingRepository: CyclicBookingRepository
 ) {
     @Value("\${app.booking.default-slot-duration:60}")
     private val defaultSlotDuration: Int = 60
@@ -126,7 +130,6 @@ class AvailabilityService(
      */
     fun getAvailableDates(serviceId: Long): List<LocalDate> {
         val now = LocalDate.now()
-        val endDate = now.plusDays(maxAdvanceDays.toLong())
 
         // Get all days of week for which this service has availability defined
         val availabilities = availabilityRepository.findAllByServiceId(serviceId)
@@ -173,6 +176,14 @@ class AvailabilityService(
             endTime
         )
 
+        // Check if this time conflicts with any cyclic bookings
+        val conflictsWithCyclicBooking = checkCyclicBookingConflicts(
+            serviceId,
+            startTime.toLocalDate(),
+            startTime.toLocalTime(),
+            endTime.toLocalTime()
+        )
+
         // Check for exception periods
         val providerId = availabilityRepository.findById(serviceId)
             .map { it.service.provider?.id ?: 0 }
@@ -184,7 +195,53 @@ class AvailabilityService(
             endTime
         )
 
-        // The slot is available if there are no overlapping bookings and it's not within an exception period
-        return overlappingBookings.isEmpty() && !isWithinExceptionPeriod
+        // The slot is available if there are no overlapping bookings, doesn't conflict with cyclic bookings,
+        // and it's not within an exception period
+        return overlappingBookings.isEmpty() && !conflictsWithCyclicBooking && !isWithinExceptionPeriod
+    }
+
+    /**
+     * Check if a requested time slot conflicts with any cyclic bookings
+     */
+    private fun checkCyclicBookingConflicts(
+        serviceId: Long,
+        date: LocalDate,
+        startTime: LocalTime,
+        endTime: LocalTime
+    ): Boolean {
+        // Find potential cyclic bookings that could overlap
+        val potentialOverlappingCyclicBookings = cyclicBookingRepository.findPotentialOverlappingCyclicBookings(
+            serviceId,
+            date
+        )
+
+        if (potentialOverlappingCyclicBookings.isEmpty()) {
+            return false
+        }
+
+        // Check each cyclic booking to see if it applies to this date and time
+        return potentialOverlappingCyclicBookings.any { cyclicBooking ->
+            // Check if this cyclic booking applies to this date
+            val appliesOnThisDate = when (cyclicBooking.recurrencePattern) {
+                RecurrencePattern.WEEKLY -> {
+                    // For weekly recurrence, check if the day of week matches
+                    cyclicBooking.dayOfWeek == date.dayOfWeek
+                }
+
+                RecurrencePattern.MONTHLY -> {
+                    // For monthly recurrence, check if the day of month matches
+                    cyclicBooking.dayOfMonth == date.dayOfMonth
+                }
+            }
+
+            // If this cyclic booking applies to this date, check if the times overlap
+            if (appliesOnThisDate) {
+                // Times overlap if start time is before end time of cyclic booking
+                // and end time is after start time of cyclic booking
+                startTime.isBefore(cyclicBooking.endTime) && endTime.isAfter(cyclicBooking.startTime)
+            } else {
+                false
+            }
+        }
     }
 }

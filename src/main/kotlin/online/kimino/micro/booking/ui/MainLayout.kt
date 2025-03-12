@@ -23,6 +23,8 @@ import online.kimino.micro.booking.ui.admin.AdminServicesView
 import online.kimino.micro.booking.ui.admin.AdminUsersView
 import online.kimino.micro.booking.ui.booking.BookingListView
 import online.kimino.micro.booking.ui.booking.CreateBookingView
+import online.kimino.micro.booking.ui.booking.CreateCyclicBookingView
+import online.kimino.micro.booking.ui.booking.CyclicBookingListView
 import online.kimino.micro.booking.ui.component.LanguageSelector
 import online.kimino.micro.booking.ui.provider.ExceptionPeriodManagementView
 import online.kimino.micro.booking.ui.provider.ProviderDashboardView
@@ -139,6 +141,13 @@ class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout()
                     )
                     drawerLayout.add(
                         createNavigationItem(
+                            getTranslation("cyclic.booking.list"),
+                            CyclicBookingListView::class.java,
+                            VaadinIcon.CALENDAR_O
+                        )
+                    )
+                    drawerLayout.add(
+                        createNavigationItem(
                             getTranslation("profile.title"),
                             ProfileView::class.java,
                             VaadinIcon.USER
@@ -167,6 +176,20 @@ class MainLayout(val authenticationContext: AuthenticationContext) : AppLayout()
                             getTranslation("booking.list"),
                             BookingListView::class.java,
                             VaadinIcon.CALENDAR_CLOCK
+                        )
+                    )
+                    drawerLayout.add(
+                        createNavigationItem(
+                            getTranslation("cyclic.booking.create"),
+                            CreateCyclicBookingView::class.java,
+                            VaadinIcon.PLUS
+                        )
+                    )
+                    drawerLayout.add(
+                        createNavigationItem(
+                            getTranslation("cyclic.booking.list"),
+                            CyclicBookingListView::class.java,
+                            VaadinIcon.CALENDAR_O
                         )
                     )
                     drawerLayout.add(
